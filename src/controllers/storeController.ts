@@ -7,12 +7,24 @@ import { UserModel } from '../models/userModel';
 
 export const saveStoreSettings = async (req: AuthRequest, res: Response) => {
   try {
-  const { customAttributes, deliveryMethods, category } = req.body;
+  const { customAttributes, deliveryMethods, category , logo } = req.body;
   const userId = req.user?.sub;
 
     const attributesArray = typeof customAttributes === 'string' 
       ? customAttributes.split(',').map((item: string) => item.trim()) 
       : customAttributes;
+
+    const updateData: any = { 
+        customAttributes: attributesArray, 
+        deliveryMethods, 
+        category, 
+        vendorId: new mongoose.Types.ObjectId(userId),
+        userId: userId
+    };
+
+    if (logo) {
+        updateData.logo = logo;
+    }
 
     const updatedStore = await Store.findOneAndUpdate(
       { userId: userId }, 
@@ -40,6 +52,7 @@ export const checkStore = async (req: AuthRequest, res: Response) => {
             return res.json({ 
                 hasStore: true, 
                 category: store.category,
+                logo: store.logo,
                 settings: {
                     deliveryMethods: store.deliveryMethods || [],
                     customAttributes: store.customAttributes || [], 
@@ -55,7 +68,7 @@ export const checkStore = async (req: AuthRequest, res: Response) => {
 
 export const createStore = async (req: AuthRequest, res: Response) => {
     try {
-        const { category,storeName, phone } = req.body;
+        const { category,storeName, phone , logo} = req.body;
         const userId = req.user?.sub;
 
         const newStore = new Store({
@@ -63,7 +76,8 @@ export const createStore = async (req: AuthRequest, res: Response) => {
             userId: userId,
             category,
             storeName: storeName,
-            phone
+            phone,
+            logo
         });
         await newStore.save();
         return res.status(201).json({ success: true, store: newStore });

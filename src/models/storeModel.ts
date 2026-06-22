@@ -8,6 +8,7 @@ export interface IStore extends Document {
   storeName: string;
   phone:string;
   email:string;
+  logo: string;
 }
 
 const StoreSchema: Schema = new Schema({
@@ -18,7 +19,8 @@ const StoreSchema: Schema = new Schema({
   deliveryMethods: { type: [String], default: [] },
   storeName: { type: String, default: "Cherish Boutique" },
   phone: { type: String },
-  email: { type: String }
+  email: { type: String },
+  logo: { type: String, default: "" }
 });
 
 export default mongoose.model<IStore>('Store', StoreSchema);

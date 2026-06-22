@@ -23,11 +23,10 @@ export const createUser = async (req: Request, res: Response) => {
 
     const isApproved = true;
 
-    // ID Sequence එක ලබාගැනීම
     const userCounter = await CounterModel.findOneAndUpdate(
       { id: "user_code" },
       { $inc: { seq: 1 } },
-      { returnDocument: 'after', upsert: true } // මෙය වඩාත් නිවැරදියි
+      { returnDocument: 'after', upsert: true } 
     );
 
     const generatedUserId = `U${String(userCounter?.seq || 1).padStart(3, '0')}`;
@@ -129,5 +128,20 @@ export const getMyDetails = async (req: AuthRequest, res: Response) => {
   } catch (err) {
     console.error("GET ME ERROR:", err);
     res.status(500).json({ message: "Internal server error while fetching user details..!" });
+  }
+};
+
+export const getUserDetails = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+  
+    const user = await UserModel.findById(id).select("name email phone address"); 
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Error" });
   }
 };

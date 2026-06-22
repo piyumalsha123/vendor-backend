@@ -1,6 +1,5 @@
 import { Document, model, Schema } from "mongoose";
 
-// අලුතින් Item interface එකක් හදමු
 interface IOrderItem {
     productId: Schema.Types.ObjectId;
     vendorId: Schema.Types.ObjectId;
@@ -20,27 +19,25 @@ export interface IOrder extends Document {
     orderId: string;
     customerId: Schema.Types.ObjectId;
     vendorId: Schema.Types.ObjectId;
-    items: IOrderItem[]; // මෙතැනට Array එකක් දාන්න
+    items: IOrderItem[]; 
     totalPrice: number;
     shippingAddress: string;
     phoneNumber: string;
     status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'paid';
 }
 
-// orderModel.ts
 const orderSchema = new Schema<IOrder>({
     orderId: { type: String, required: true },
     customerId: { type: Schema.Types.ObjectId, ref: "user_details", required: true },
     vendorId: { type: Schema.Types.ObjectId, ref: "user_details", required: true },
-    // මෙතැන ප්‍රධානම වෙනස:
     items: [{
     productId: { type: Schema.Types.ObjectId, ref: "products", required: true },
-    vendorId: { type: Schema.Types.ObjectId, ref: "user_details", required: true }, // අයිතමයට අදාළ vendorId
+    vendorId: { type: Schema.Types.ObjectId, ref: "user_details", required: true }, 
     title: { type: String, required: true },
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
     images: [{ type: String }],
-    status: { type: String, default: 'pending' }, // item මට්ටමේ status එක
+    status: { type: String, default: 'pending' }, 
     selectedVariant: {
         size: String,
         color: String,

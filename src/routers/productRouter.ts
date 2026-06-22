@@ -1,4 +1,4 @@
-// routers/productRouter.ts
+
 import { Router } from "express";
 import { 
   createProduct, 
@@ -20,7 +20,7 @@ router.post("/save", authenticate, requireRole([UserRole.VENDOR]), createProduct
 router.put("/update/:id", authenticate, requireRole([UserRole.VENDOR]), updateProduct);
 router.delete("/delete/:id", authenticate, requireRole([UserRole.VENDOR]), deleteProduct);
 
-// AI Suggestion route - මෙය Vendor සඳහා පමණක් ආරක්ෂිතව තැබීම වඩා සුදුසුයි
+// AI Suggestion 
 router.post("/ai/suggest", authenticate, requireRole([UserRole.VENDOR]), getAiSuggestions);
 
 // Public/All user routes

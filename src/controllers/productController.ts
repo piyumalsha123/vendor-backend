@@ -6,7 +6,6 @@ import mongoose from "mongoose";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// AI setup (server.ts එකේ වගේම)
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
 
 export const createProduct = async (req: AuthRequest, res: Response) => {
@@ -16,7 +15,6 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
 
     const { title, description, price, stock, category, images, variants, paymentMethods, deliveryCharge } = req.body;
 
-    // --- AI කොටස ආරම්භය ---
     let metadata = {};
     if (variants && Object.keys(variants).length > 0) {
       try {
@@ -33,11 +31,10 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
         metadata = JSON.parse(text);
       } catch (aiErr) {
         console.error("AI Classification Failed, using fallback:", aiErr);
-        metadata = {}; // AI වැරදුනොත් හිස් එකක් යවන්න
+        metadata = {}; 
       }
     }
-    // --- AI කොටස අවසානය ---
-
+    
     const counter = await CounterModel.findOneAndUpdate(
       { id: "product_code" },
       { $inc: { seq: 1 } },
@@ -56,7 +53,7 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
       category,
       images: images || [],
       variants: variants || {},
-      variantsMetadata: metadata, // AI මගින් ලැබුණු Metadata එක මෙතැනට දාන්න
+      variantsMetadata: metadata, 
       isAvailable: true,
       paymentMethods: paymentMethods || { cod: false, bankTransfer: false },
       deliveryCharge: deliveryCharge || 0
@@ -98,7 +95,7 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
     const updatedProduct = await ProductModel.findOneAndUpdate(
       { _id: id, vendorId: vendorId },
       { $set: req.body },
-      { new: true } // updated document එකම ලබාගැනීමට
+      { new: true }
     );
 
     if (!updatedProduct) {
@@ -157,7 +154,7 @@ export const getAllPublicProducts = async (req: Request, res: Response) => {
 // productController.ts
 export const getProducts = async (req: Request, res: Response) => {
     try {
-        const { vendorId } = req.query; // URL එකේ එන query parameter එක
+        const { vendorId } = req.query; 
         let query = {};
         
         if (vendorId) {
@@ -178,8 +175,7 @@ export const getPublicProducts = async (req: Request, res: Response) => {
         let query: any = {};
 
         if (search) {
-            // $regex: search මගින් වචනයක කොටසක් (partial match) හඳුනා ගන්නවා
-            // $options: "i" මගින් case-insensitive කරනවා (FROCK/frock දෙකටම වැඩ)
+         
             query.title = { $regex: search, $options: "i" };
         }
 

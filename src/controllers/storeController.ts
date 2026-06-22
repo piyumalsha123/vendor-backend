@@ -31,7 +31,6 @@ export const saveStoreSettings = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// storeController.ts - checkStore
 export const checkStore = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.sub;
@@ -43,7 +42,7 @@ export const checkStore = async (req: AuthRequest, res: Response) => {
                 category: store.category,
                 settings: {
                     deliveryMethods: store.deliveryMethods || [],
-                    customAttributes: store.customAttributes || [], // මෙතන Array එකක් විදිහට යවන්න
+                    customAttributes: store.customAttributes || [], 
                     deliveryCharge: "" 
                 } 
             });
@@ -73,7 +72,6 @@ export const createStore = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// storeController.ts එකේ අගට මේක එකතු කරන්න
 export const getStoreSettings = async (req: AuthRequest, res: Response) => {
   try {
     const store = await Store.findOne({ userId: req.user?.sub });
@@ -89,7 +87,7 @@ export const getStoreSettings = async (req: AuthRequest, res: Response) => {
 export const updateStorePhone = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.sub;
-    const { phone } = req.body; // Frontend එකෙන් එවන අලුත් අංකය
+    const { phone } = req.body; 
 
     const updatedStore = await Store.findOneAndUpdate(
       { userId: userId },
@@ -103,22 +101,18 @@ export const updateStorePhone = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// storeController.ts හි getStoreById ශ්‍රිතය මෙසේ සකසන්න
 export const getStoreById = async (req: Request, res: Response) => {
     try {
         const { vendorId } = req.params;
         
-        // 1. Store එක හොයන්න
         const store = await Store.findOne({ vendorId: vendorId }).lean();
         if (!store) return res.status(404).json({ message: "Store not found" });
 
-        // 2. Vendor ගේ email එක ගන්න (User model එකේ තිබේ නම්)
-        const vendor = await UserModel.findById(vendorId); // ඔබේ User model එක මෙතන දාන්න
+        const vendor = await UserModel.findById(vendorId); 
         
-        // 3. Store object එකට email එක append කරන්න
         const storeWithEmail = {
             ...store,
-            email: vendor ? vendor.email : "N/A" // මෙතැනදී email එක තනියම දානවා
+            email: vendor ? vendor.email : "N/A" 
         };
 
         res.status(200).json(storeWithEmail);
@@ -127,11 +121,10 @@ export const getStoreById = async (req: Request, res: Response) => {
     }
 };
 
-// 2. එම Store එකේ සියලුම Products ලබා ගැනීමට
 export const getProductsByVendor = async (req: Request, res: Response) => {
     try {
         const { vendorId } = req.params;
-        // ProductModel එක හදලා තියෙන විදියට වෙනස් කරගන්න
+       
         const products = await ProductModel.find({ vendorId: vendorId }); 
         res.status(200).json(products);
     } catch (err) {

@@ -28,6 +28,7 @@ export const authenticate = (
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
+    console.log("JWT Payload Data:", payload);
     
    
     (req as any).user = payload;
@@ -40,3 +41,4 @@ export const authenticate = (
     return res.status(400).json({ message: "Invalid Token" });
   }
 };
+

@@ -71,6 +71,25 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getAiSuggestions = async (req: Request, res: Response) => {
+  const { attributeName, category, productTitle } = req.body;
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = `
+Act as a professional e-commerce product manager.
+For a product titled '${productTitle}' in the '${category}' category, suggest 6 highly relevant and common options for the attribute '${attributeName}'. 
+Return ONLY a comma-separated list of values. 
+Do not include any extra text, labels, or explanation.
+Example format: Red,Blue,Green,Yellow,Black,White
+`;
+    const result = await model.generateContent(prompt);
+    const options = result.response.text().split(",").map(item => item.trim());
+    res.status(200).json({ suggestions: options });
+  } catch (err) {
+    res.status(500).json({ message: "AI suggestion failed" });
+  }
+};
+
 export const updateProduct = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;

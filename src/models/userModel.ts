@@ -31,7 +31,7 @@ const userSchema = new Schema<IUser>(
     },
     approved: { type: Boolean, required: true },
     storeName: { type: String, required: false },
-    phone: { type: String },
+   phone: { type: String, required: true },
     address: { type: String, required: true },
   },
   { timestamps: true }

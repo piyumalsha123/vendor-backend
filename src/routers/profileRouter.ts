@@ -1,13 +1,8 @@
-import express from 'express';
+import { Router } from 'express';
 import { getProfile, updateProfile } from '../controllers/profileController';
-import { authenticate } from '../middleware/auth'; 
+import { authenticate } from '../middleware/auth';
 
-const router = express.Router();
-
-router.use((req, res, next) => {
-  console.log(`Profile route hit: ${req.method} ${req.originalUrl}`);
-  next();
-});
+const router = Router();
 
 router.get('/', authenticate, getProfile);
 router.put('/', authenticate, updateProfile);

@@ -1,5 +1,5 @@
 import express from 'express';
-import { saveStoreSettings, getStoreSettings, checkStore, createStore, getStoreById, getProductsByVendor, uploadLogoController } from '../controllers/storeController';
+import { saveStoreSettings, getStoreSettings, checkStore, createStore, getStoreById, getProductsByVendor } from '../controllers/storeController';
 import { authenticate } from '../middleware/auth'; 
 import { upload } from '../middleware/upload';
 import { uploadImage } from '../controllers/uploadController';

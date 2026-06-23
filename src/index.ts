@@ -87,6 +87,11 @@ app.use(cors({
   credentials: true
 }));
 
+app.get("/", (req, res) => {
+  res.json({ message: "Vendor Backend API is running successfully!" });
+});
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -43,6 +43,7 @@ const StoreSchema = new mongoose_1.Schema({
     storeName: { type: String, default: "Cherish Boutique" },
     phone: { type: String },
     email: { type: String },
+    address: { type: String },
     logo: { type: String, default: "" }
 });
 exports.default = mongoose_1.default.model('Store', StoreSchema);

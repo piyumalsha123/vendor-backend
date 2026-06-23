@@ -10,7 +10,7 @@ const productModel_1 = require("../models/productModel");
 const userModel_1 = require("../models/userModel");
 const saveStoreSettings = async (req, res) => {
     try {
-        const { customAttributes, deliveryMethods, category, logo } = req.body;
+        const { customAttributes, deliveryMethods, category, logo, storeName, phone, email, address } = req.body;
         const userId = req.user?.sub;
         const attributesArray = typeof customAttributes === 'string'
             ? customAttributes.split(',').map((item) => item.trim())
@@ -19,19 +19,16 @@ const saveStoreSettings = async (req, res) => {
             customAttributes: attributesArray,
             deliveryMethods,
             category,
+            storeName,
+            phone,
+            email,
+            address, // අලුතින් එක් කළා
             vendorId: new mongoose_1.default.Types.ObjectId(userId),
             userId: userId
         };
-        if (logo) {
+        if (logo)
             updateData.logo = logo;
-        }
-        const updatedStore = await storeModel_1.default.findOneAndUpdate({ userId: userId }, {
-            customAttributes: attributesArray,
-            deliveryMethods,
-            category,
-            vendorId: new mongoose_1.default.Types.ObjectId(userId),
-            userId: userId
-        }, { upsert: true, new: true });
+        const updatedStore = await storeModel_1.default.findOneAndUpdate({ userId: userId }, { $set: updateData }, { upsert: true, returnDocument: 'after' });
         res.status(200).json(updatedStore);
     }
     catch (err) {
@@ -49,9 +46,12 @@ const checkStore = async (req, res) => {
                 category: store.category,
                 logo: store.logo,
                 settings: {
+                    storeName: store.storeName,
+                    phone: store.phone,
+                    email: store.email,
+                    address: store.address,
                     deliveryMethods: store.deliveryMethods || [],
-                    customAttributes: store.customAttributes || [],
-                    deliveryCharge: ""
+                    customAttributes: store.customAttributes || []
                 }
             });
         }
@@ -64,15 +64,17 @@ const checkStore = async (req, res) => {
 exports.checkStore = checkStore;
 const createStore = async (req, res) => {
     try {
-        const { category, storeName, phone, logo } = req.body;
+        const { category, storeName, phone, logo, email, address } = req.body;
         const userId = req.user?.sub;
         const newStore = new storeModel_1.default({
             vendorId: new mongoose_1.default.Types.ObjectId(userId),
             userId: userId,
             category,
-            storeName: storeName,
+            storeName,
             phone,
-            logo
+            logo,
+            email, // එකතු කළා
+            address // එකතු කළා
         });
         await newStore.save();
         return res.status(201).json({ success: true, store: newStore });
@@ -85,9 +87,8 @@ exports.createStore = createStore;
 const getStoreSettings = async (req, res) => {
     try {
         const store = await storeModel_1.default.findOne({ userId: req.user?.sub });
-        if (!store) {
+        if (!store)
             return res.status(404).json({ message: "Store not found" });
-        }
         res.status(200).json(store);
     }
     catch (err) {

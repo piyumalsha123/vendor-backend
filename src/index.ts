@@ -78,7 +78,6 @@ dotenv.config();
 
 const app = express();
 
-// CORS: Frontend URL එක මෙතැනට දෙන්න (ඔබේ Vercel URL එක මෙතැනට එක් කරන්න)
 app.use(cors({
   origin: ["http://localhost:5173", "https://vendor-frontend-rose.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE"],

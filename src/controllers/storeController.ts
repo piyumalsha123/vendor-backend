@@ -7,8 +7,12 @@ import { UserModel } from '../models/userModel';
 
 export const saveStoreSettings = async (req: AuthRequest, res: Response) => {
   try {
-  const { customAttributes, deliveryMethods, category , logo } = req.body;
-  const userId = req.user?.sub;
+    const { 
+      customAttributes, deliveryMethods, category, logo, 
+      storeName, phone, email, address 
+    } = req.body;
+    
+    const userId = req.user?.sub;
 
     const attributesArray = typeof customAttributes === 'string' 
       ? customAttributes.split(',').map((item: string) => item.trim()) 
@@ -18,25 +22,22 @@ export const saveStoreSettings = async (req: AuthRequest, res: Response) => {
         customAttributes: attributesArray, 
         deliveryMethods, 
         category, 
+        storeName,
+        phone,
+        email,     
+        address,    // අලුතින් එක් කළා
         vendorId: new mongoose.Types.ObjectId(userId),
         userId: userId
     };
 
-    if (logo) {
-        updateData.logo = logo;
-    }
+    if (logo) updateData.logo = logo;
 
     const updatedStore = await Store.findOneAndUpdate(
       { userId: userId }, 
-      { 
-        customAttributes: attributesArray, 
-        deliveryMethods, 
-        category, 
-        vendorId: new mongoose.Types.ObjectId(userId),
-        userId: userId
-      },
-      { upsert: true, new: true }
+      { $set: updateData }, 
+      { upsert: true, returnDocument: 'after' }
     );
+    
     res.status(200).json(updatedStore);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -54,9 +55,12 @@ export const checkStore = async (req: AuthRequest, res: Response) => {
                 category: store.category,
                 logo: store.logo,
                 settings: {
+                    storeName: store.storeName,
+                    phone: store.phone,
+                    email: store.email,
+                    address: store.address,
                     deliveryMethods: store.deliveryMethods || [],
-                    customAttributes: store.customAttributes || [], 
-                    deliveryCharge: "" 
+                    customAttributes: store.customAttributes || []
                 } 
             });
         }
@@ -68,16 +72,18 @@ export const checkStore = async (req: AuthRequest, res: Response) => {
 
 export const createStore = async (req: AuthRequest, res: Response) => {
     try {
-        const { category,storeName, phone , logo} = req.body;
+        const { category, storeName, phone, logo, email, address } = req.body;
         const userId = req.user?.sub;
 
         const newStore = new Store({
             vendorId: new mongoose.Types.ObjectId(userId),
             userId: userId,
             category,
-            storeName: storeName,
+            storeName,
             phone,
-            logo
+            logo,
+            email,    // එකතු කළා
+            address   // එකතු කළා
         });
         await newStore.save();
         return res.status(201).json({ success: true, store: newStore });
@@ -89,14 +95,13 @@ export const createStore = async (req: AuthRequest, res: Response) => {
 export const getStoreSettings = async (req: AuthRequest, res: Response) => {
   try {
     const store = await Store.findOne({ userId: req.user?.sub });
-    if (!store) {
-      return res.status(404).json({ message: "Store not found" });
-    }
+    if (!store) return res.status(404).json({ message: "Store not found" });
     res.status(200).json(store); 
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 export const updateStorePhone = async (req: AuthRequest, res: Response) => {
   try {
@@ -145,3 +150,4 @@ export const getProductsByVendor = async (req: Request, res: Response) => {
         res.status(500).json({ error: "Server error" });
     }
 };
+

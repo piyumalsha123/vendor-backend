@@ -8,6 +8,7 @@ export interface IStore extends Document {
   storeName: string;
   phone:string;
   email:string;
+  address: string;
   logo: string;
 }
 
@@ -20,6 +21,7 @@ const StoreSchema: Schema = new Schema({
   storeName: { type: String, default: "Cherish Boutique" },
   phone: { type: String },
   email: { type: String },
+  address: { type: String },
   logo: { type: String, default: "" }
 });
 

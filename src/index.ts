@@ -65,7 +65,6 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 import AuthRouter from "./routers/authRouter";
@@ -75,6 +74,7 @@ import uploadRouter from "./routers/uploadRouter";
 import StoreRouter from "./routers/storeRouter";
 import profileRouter from "./routers/profileRouter";
 import vendorRouter from "./routers/vendorRouter";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
@@ -110,24 +110,25 @@ app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
 
 app.post("/api/v1/generate-attributes", async (req, res) => {
-  const { category } = req.body;
-
   try {
+    const { category } = req.body;
+
     const genAI = new GoogleGenerativeAI(
       process.env.GOOGLE_AI_API_KEY as string
     );
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-exp"
+      model: "gemini-1.5-flash"
     });
 
     const prompt = `
-      Generate 10 product attributes for ${category}.
+Generate 10 ecommerce product attributes for ${category}.
 
-      Return ONLY JSON array.
-      Example:
-      ["Color","Size","Material"]
-    `;
+Return ONLY JSON array.
+
+Example:
+["Color","Size","Material"]
+`;
 
     const result = await model.generateContent(prompt);
 
@@ -142,12 +143,15 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
 
     const attributes = JSON.parse(cleaned);
 
-    res.json({ attributes });
+    return res.json({
+      success: true,
+      attributes
+    });
 
   } catch (err: any) {
-    console.error(err);
+    console.error("AI ERROR:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
       error: err.message
     });
   }

@@ -119,7 +119,7 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
 
   try {
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
       You are an expert e-commerce catalog assistant. 

@@ -74,7 +74,8 @@ import uploadRouter from "./routers/uploadRouter";
 import StoreRouter from "./routers/storeRouter";
 import profileRouter from "./routers/profileRouter";
 import vendorRouter from "./routers/vendorRouter";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import axios from "axios";
+//import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
@@ -110,30 +111,54 @@ app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
 
 app.post("/api/v1/generate-attributes", async (req, res) => {
-  const { category } = req.body;
-  
-  if (!process.env.GOOGLE_AI_API_KEY) {
-    return res.status(500).json({ error: "Server Configuration Error" });
-  }
-
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-  
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const { category } = req.body;
 
-    const prompt = `Category: "${category}". Suggest 10-15 relevant custom product attributes. Return as a JSON array only.`;
-console.log("NEW CODE RUNNING");
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const jsonMatch = text.match(/\[.*\]/s);
-    
-    if (!jsonMatch) throw new Error("Invalid response format");
-    
-    const attributes = JSON.parse(jsonMatch[0]);
-    res.json({ attributes });
+    const prompt = `
+Generate 10 ecommerce product attributes for ${category}.
+
+Return ONLY JSON array.
+
+Example:
+["Color","Size","Material"]
+`;
+
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ]
+      }
+    );
+
+    const text =
+      response.data.candidates[0].content.parts[0].text;
+
+    const cleaned = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const attributes = JSON.parse(cleaned);
+
+    return res.json({
+      success: true,
+      attributes
+    });
+
   } catch (err: any) {
-    console.error("AI Error:", err);
-    res.status(500).json({ error: "Failed to generate" });
+    console.error("AI ERROR:", err.response?.data || err.message);
+
+    return res.status(500).json({
+      error: err.response?.data || err.message
+    });
   }
 });
 

@@ -110,14 +110,21 @@ app.use("/api/v1/products", ProductRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
 
+
 app.post("/api/v1/generate-attributes", async (req, res) => {
   try {
     const { category } = req.body;
 
+    if (!category) {
+      return res.status(400).json({
+        error: "Category is required"
+      });
+    }
+
     const prompt = `
 Generate 10 ecommerce product attributes for ${category}.
 
-Return ONLY JSON array.
+Return ONLY a JSON array.
 
 Example:
 ["Color","Size","Material"]
@@ -139,7 +146,9 @@ Example:
     );
 
     const text =
-      response.data.candidates[0].content.parts[0].text;
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+
+    console.log("AI RAW RESPONSE:", text);
 
     const cleaned = text
       .replace(/```json/g, "")
@@ -149,18 +158,21 @@ Example:
     const attributes = JSON.parse(cleaned);
 
     return res.json({
-      success: true,
       attributes
     });
 
   } catch (err: any) {
-    console.error("AI ERROR:", err.response?.data || err.message);
+    console.error(
+      "AI ERROR:",
+      err.response?.data || err.message
+    );
 
     return res.status(500).json({
       error: err.response?.data || err.message
     });
   }
 });
+
 
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });

@@ -93,10 +93,15 @@ app.use("/api/v1/vendor", vendorRouter_1.default);
 app.post("/api/v1/generate-attributes", async (req, res) => {
     try {
         const { category } = req.body;
+        if (!category) {
+            return res.status(400).json({
+                error: "Category is required"
+            });
+        }
         const prompt = `
 Generate 10 ecommerce product attributes for ${category}.
 
-Return ONLY JSON array.
+Return ONLY a JSON array.
 
 Example:
 ["Color","Size","Material"]
@@ -112,14 +117,14 @@ Example:
                 }
             ]
         });
-        const text = response.data.candidates[0].content.parts[0].text;
+        const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+        console.log("AI RAW RESPONSE:", text);
         const cleaned = text
             .replace(/```json/g, "")
             .replace(/```/g, "")
             .trim();
         const attributes = JSON.parse(cleaned);
         return res.json({
-            success: true,
             attributes
         });
     }

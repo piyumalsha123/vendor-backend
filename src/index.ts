@@ -111,11 +111,25 @@ app.use("/api/v1/stores", StoreRouter);
 app.use("/api/v1/products", ProductRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
-
 app.post("/api/v1/generate-attributes", async (req, res) => {
-  res.json({ message: "Attributes generated" });
-});
+  const { category } = req.body;
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+  try {
+    const prompt = `Act as an expert e-commerce consultant. For a store in the category: "${category}", suggest 10-15 unique and relevant custom attributes (like size, color, material, style, occasion, etc.). Return the response strictly as a JSON array of strings, for example: ["Size", "Color", "Material"]. Do not include any introductory or concluding text, only the JSON.`;
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const attributes = JSON.parse(jsonString);
+    
+    res.json({ attributes });
+  } catch (err) {
+    console.error("AI Generation Error:", err);
+    res.status(500).json({ error: "Failed to generate attributes" });
+  }
+});
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });

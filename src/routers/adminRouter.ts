@@ -77,4 +77,13 @@ router.put('/orders/:id/status', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+router.get('/stores', authenticate, isAdmin, async (req, res) => {
+  try {
+    const stores = await StoreModel.find(); 
+    res.json(stores);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch stores" });
+  }
+});
+
 export default router;

@@ -110,48 +110,30 @@ app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
 
 app.post("/api/v1/generate-attributes", async (req, res) => {
+  const { category } = req.body;
+
   try {
-    const { category } = req.body;
-
-    if (!category) {
-      return res.status(400).json({
-        error: "Category is required"
-      });
-    }
-
-    if (!process.env.GOOGLE_AI_API_KEY) {
-      return res.status(500).json({
-        error: "Missing GOOGLE_AI_API_KEY"
-      });
-    }
-
     const genAI = new GoogleGenerativeAI(
-      process.env.GOOGLE_AI_API_KEY
+      process.env.GOOGLE_AI_API_KEY as string
     );
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash"
+      model: "gemini-2.0-flash-exp"
     });
 
     const prompt = `
-     You are an expert e-commerce assistant.
+      Generate 10 product attributes for ${category}.
 
-Store category: ${category}
+      Return ONLY JSON array.
+      Example:
+      ["Color","Size","Material"]
+    `;
 
-Generate 10 relevant product attributes.
-
-Return ONLY JSON array.
-
-Example:
-["Size", "Color", "Material"]
-`;
     const result = await model.generateContent(prompt);
 
     const response = await result.response;
 
     const text = response.text();
-
-    console.log("RAW AI RESPONSE:", text);
 
     const cleaned = text
       .replace(/```json/g, "")
@@ -160,14 +142,12 @@ Example:
 
     const attributes = JSON.parse(cleaned);
 
-    return res.json({
-      attributes
-    });
+    res.json({ attributes });
 
   } catch (err: any) {
-    console.error("AI ERROR:", err);
+    console.error(err);
 
-    return res.status(500).json({
+    res.status(500).json({
       error: err.message
     });
   }

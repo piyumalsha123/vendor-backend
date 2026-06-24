@@ -110,56 +110,66 @@ app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
 
 app.post("/api/v1/generate-attributes", async (req, res) => {
-  const { category } = req.body;
-  
-  if (!process.env.GOOGLE_AI_API_KEY) {
-    console.error("GOOGLE_AI_API_KEY is missing in environment variables!");
-    return res.status(500).json({ error: "Server Configuration Error" });
-  }
-
   try {
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const { category } = req.body;
+
+    if (!category) {
+      return res.status(400).json({
+        error: "Category is required"
+      });
+    }
+
+    if (!process.env.GOOGLE_AI_API_KEY) {
+      return res.status(500).json({
+        error: "Missing GOOGLE_AI_API_KEY"
+      });
+    }
+
+    const genAI = new GoogleGenerativeAI(
+      process.env.GOOGLE_AI_API_KEY
+    );
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash"
+    });
 
     const prompt = `
-      You are an expert e-commerce catalog assistant. 
-      The store category is: "${category}".
-      Suggest exactly 10-15 highly relevant custom product attributes for this specific category.
-      - If it is "Clothing", focus on: Size, Material, Color, Fit, Gender, etc.
-      - If it is "Cakes", focus on: Flavor, Weight, Occasion, Dietary Info, Filling, etc.
-      - If it is "Flowers", focus on: Flower Type, Arrangement Style, Occasion, Stem Count, etc.
-      - If it is "Handmade", focus on: Material, Craft Technique, Customization, etc.
-      
-      Return the response STRICTLY as a JSON array of strings (e.g., ["Size", "Material", "Color"]). 
-      Do not include any introductory or concluding text, explanations, or markdown formatting. 
-      ONLY the raw JSON array.
-    `;
+     You are an expert e-commerce assistant.
 
+Store category: ${category}
+
+Generate 10 relevant product attributes.
+
+Return ONLY JSON array.
+
+Example:
+["Size", "Color", "Material"]
+`;
     const result = await model.generateContent(prompt);
 
-const response = await result.response;
+    const response = await result.response;
 
-const text = response.text().trim();
+    const text = response.text();
 
-const cleaned = text
-  .replace(/```json/g, "")
-  .replace(/```/g, "")
-  .trim();
+    console.log("RAW AI RESPONSE:", text);
 
-const jsonMatch = cleaned.match(/\[.*\]/s);
+    const cleaned = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
 
-if (!jsonMatch) {
-  console.error("AI response invalid:", cleaned);
-  throw new Error("Invalid AI response format");
-}
+    const attributes = JSON.parse(cleaned);
 
-const attributes = JSON.parse(jsonMatch[0]);
-
-res.json({ attributes });
+    return res.json({
+      attributes
+    });
 
   } catch (err: any) {
-    console.error("AI Generation Error Details:", err.message);
-    res.status(500).json({ error: "Failed to generate attributes: " + err.message });
+    console.error("AI ERROR:", err);
+
+    return res.status(500).json({
+      error: err.message
+    });
   }
 });
 

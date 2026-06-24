@@ -42,3 +42,11 @@ export const authenticate = (
   }
 };
 
+export const isAdmin = (req: any, res: any, next: any) => {
+  if (req.user && req.user.roles && req.user.roles.includes('ADMIN')) {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied. Admins only." });
+  }
+};
+

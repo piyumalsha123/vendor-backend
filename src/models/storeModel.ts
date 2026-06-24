@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IStore extends Document {
   vendorId: mongoose.Types.ObjectId;
   category: string;
+  isActive: boolean;
   customAttributes: string[];
   deliveryMethods: string[];
   storeName: string;
@@ -16,6 +17,7 @@ const StoreSchema: Schema = new Schema({
   vendorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   category: { type: String, required: true },
   userId: { type: String, required: true, unique: true },
+  isActive: { type: Boolean, default: true },
   customAttributes: { type: [String], default: [] },
   deliveryMethods: { type: [String], default: [] },
   storeName: { type: String },

@@ -67,6 +67,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 
+import adminRouter from "./routers/adminRouter"
 import AuthRouter from "./routers/authRouter";
 import ProductRouter from "./routers/productRouter";
 import orderRouter from "./routers/orderRouter";
@@ -100,7 +101,7 @@ app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.originalUrl}`);
   next();
 });
-
+app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/auth", AuthRouter);
 app.use("/api/v1/upload", uploadRouter);
 app.use("/api/v1/orders", orderRouter);

@@ -56,4 +56,9 @@ router.get('/stores', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+router.get('/users', authenticate, isAdmin, async (req, res) => {
+  const users = await UserModel.find({  roles: { $in: [UserRole.USER] } });
+  res.json(users);
+});
+
 export default router;

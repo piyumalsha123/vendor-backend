@@ -63,12 +63,12 @@ const uploadRouter_1 = __importDefault(require("./routers/uploadRouter"));
 const storeRouter_1 = __importDefault(require("./routers/storeRouter"));
 const profileRouter_1 = __importDefault(require("./routers/profileRouter"));
 const vendorRouter_1 = __importDefault(require("./routers/vendorRouter"));
+const generative_ai_1 = require("@google/generative-ai");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-// CORS Settings
 app.use((0, cors_1.default)({
     origin: ["http://localhost:5173", "https://vendor-frontend-rose.vercel.app"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
@@ -77,12 +77,10 @@ app.get("/", (req, res) => {
 });
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-// Logging middleware
 app.use((req, res, next) => {
     console.log(`[${req.method}] ${req.originalUrl}`);
     next();
 });
-// Routes
 app.use("/api/v1/auth", authRouter_1.default);
 app.use("/api/v1/upload", uploadRouter_1.default);
 app.use("/api/v1/orders", orderRouter_1.default);
@@ -92,13 +90,43 @@ app.use("/api/v1/products", productRouter_1.default);
 app.use("/api/v1/profile", profileRouter_1.default);
 app.use("/api/v1/vendor", vendorRouter_1.default);
 app.post("/api/v1/generate-attributes", async (req, res) => {
-    res.json({ message: "Attributes generated" });
+    try {
+        const { category } = req.body;
+        const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash"
+        });
+        const prompt = `
+Generate 10 ecommerce product attributes for ${category}.
+
+Return ONLY JSON array.
+
+Example:
+["Color","Size","Material"]
+`;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        const cleaned = text
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
+        const attributes = JSON.parse(cleaned);
+        return res.json({
+            success: true,
+            attributes
+        });
+    }
+    catch (err) {
+        console.error("AI ERROR:", err);
+        return res.status(500).json({
+            error: err.message
+        });
+    }
 });
-// 404 Handler
 app.use((req, res) => {
     res.status(404).json({ message: `Route ${req.originalUrl} not found` });
 });
-// Database Connection Helper
 const connectDB = async () => {
     try {
         if (mongoose_1.default.connection.readyState >= 1)
@@ -111,12 +139,10 @@ const connectDB = async () => {
         throw err;
     }
 };
-// Vercel Serverless Function Export
 exports.default = async (req, res) => {
     await connectDB();
     return app(req, res);
 };
-// Local Development Environment
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 5000;
     connectDB().then(() => {

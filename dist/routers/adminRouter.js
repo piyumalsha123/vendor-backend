@@ -74,4 +74,13 @@ router.put('/orders/:id/status', auth_1.authenticate, auth_1.isAdmin, async (req
         res.status(500).json({ error: "Failed to update order status" });
     }
 });
+router.get('/stores', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
+    try {
+        const stores = await storeModel_1.default.find();
+        res.json(stores);
+    }
+    catch (err) {
+        res.status(500).json({ error: "Failed to fetch stores" });
+    }
+});
 exports.default = router;

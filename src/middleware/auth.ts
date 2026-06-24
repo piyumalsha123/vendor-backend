@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { UserRole } from "../models/userModel";
 
 dotenv.config();
 
@@ -43,7 +44,9 @@ export const authenticate = (
 };
 
 export const isAdmin = (req: any, res: any, next: any) => {
-  if (req.user && req.user.roles && req.user.roles.includes('ADMIN')) {
+  console.log("User Roles from Middleware:", req.user?.roles); 
+
+  if (req.user && req.user.roles && Array.isArray(req.user.roles) && req.user.roles.includes(UserRole.ADMIN)) {
     next();
   } else {
     res.status(403).json({ message: "Access denied. Admins only." });

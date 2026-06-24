@@ -18,7 +18,7 @@ const StoreSchema: Schema = new Schema({
   userId: { type: String, required: true, unique: true },
   customAttributes: { type: [String], default: [] },
   deliveryMethods: { type: [String], default: [] },
-  storeName: { type: String, default: "Cherish Boutique" },
+  storeName: { type: String },
   phone: { type: String },
   email: { type: String },
   address: { type: String },

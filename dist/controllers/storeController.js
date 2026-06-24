@@ -64,23 +64,32 @@ const checkStore = async (req, res) => {
 exports.checkStore = checkStore;
 const createStore = async (req, res) => {
     try {
-        const { category, storeName, phone, logo, email, address } = req.body;
+        const { category, phone, logo, email, address } = req.body;
         const userId = req.user?.sub;
+        // logged user data gannawa
+        const user = await userModel_1.UserModel.findById(userId);
         const newStore = new storeModel_1.default({
             vendorId: new mongoose_1.default.Types.ObjectId(userId),
             userId: userId,
             category,
-            storeName,
+            // register weddi dapu store name eka
+            storeName: user?.storeName || user?.name || "My Store",
             phone,
             logo,
-            email, // එකතු කළා
-            address // එකතු කළා
+            email,
+            address
         });
         await newStore.save();
-        return res.status(201).json({ success: true, store: newStore });
+        return res.status(201).json({
+            success: true,
+            store: newStore
+        });
     }
     catch (err) {
-        return res.status(500).json({ error: "Server Error" });
+        console.error(err);
+        return res.status(500).json({
+            error: "Server Error"
+        });
     }
 };
 exports.createStore = createStore;

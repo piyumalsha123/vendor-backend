@@ -115,7 +115,7 @@ app.use("/api/v1/vendor", vendorRouter);
 app.post("/api/v1/generate-attributes", async (req, res) => {
   const { category } = req.body;
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
   try {
     const prompt = `
@@ -134,9 +134,16 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     
-    const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    const attributes = JSON.parse(jsonString);
+    // const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    // const attributes = JSON.parse(jsonString);
     
+const jsonMatch = text.match(/\[.*\]/s);
+    if (!jsonMatch) {
+      throw new Error("AI did not return a valid JSON array");
+    }
+    
+    const attributes = JSON.parse(jsonMatch[0]);
+
     res.json({ attributes });
   } catch (err) {
     console.error("AI Generation Error:", err);

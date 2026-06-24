@@ -111,10 +111,11 @@ app.use("/api/v1/stores", StoreRouter);
 app.use("/api/v1/products", ProductRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
+
 app.post("/api/v1/generate-attributes", async (req, res) => {
   const { category } = req.body;
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
   try {
     const prompt = `Act as an expert e-commerce consultant. For a store in the category: "${category}", suggest 10-15 unique and relevant custom attributes (like size, color, material, style, occasion, etc.). Return the response strictly as a JSON array of strings, for example: ["Size", "Color", "Material"]. Do not include any introductory or concluding text, only the JSON.`;

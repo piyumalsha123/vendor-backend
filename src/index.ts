@@ -118,7 +118,19 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
   const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
   try {
-    const prompt = `Act as an expert e-commerce consultant. For a store in the category: "${category}", suggest 10-15 unique and relevant custom attributes (like size, color, material, style, occasion, etc.). Return the response strictly as a JSON array of strings, for example: ["Size", "Color", "Material"]. Do not include any introductory or concluding text, only the JSON.`;
+    const prompt = `
+      You are an expert e-commerce catalog assistant. 
+      The store category is: "${category}".
+      Suggest exactly 10-15 highly relevant custom product attributes for this specific category.
+      - If it is "Clothing", focus on: Size, Material, Color, Fit, Gender, etc.
+      - If it is "Cakes", focus on: Flavor, Weight, Occasion, Dietary Info, Filling, etc.
+      - If it is "Flowers", focus on: Flower Type, Arrangement Style, Occasion, Stem Count, etc.
+      - If it is "Handmade", focus on: Material, Craft Technique, Customization, etc.
+      
+      Return the response STRICTLY as a JSON array of strings (e.g., ["Size", "Material", "Color"]). 
+      Do not include any introductory or concluding text, explanations, or markdown formatting. 
+      ONLY the raw JSON array.
+    `;
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     

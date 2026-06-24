@@ -118,8 +118,8 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       You are an expert e-commerce catalog assistant. 
@@ -136,16 +136,26 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
     `;
 
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
-  
-    const jsonMatch = text.match(/\[.*\]/s);
-    if (!jsonMatch) {
-      console.error("AI response did not contain a valid JSON array:", text);
-      throw new Error("Invalid response format from AI");
-    }
-    
-    const attributes = JSON.parse(jsonMatch[0]);
-    res.json({ attributes });
+
+const response = await result.response;
+
+const text = response.text().trim();
+
+const cleaned = text
+  .replace(/```json/g, "")
+  .replace(/```/g, "")
+  .trim();
+
+const jsonMatch = cleaned.match(/\[.*\]/s);
+
+if (!jsonMatch) {
+  console.error("AI response invalid:", cleaned);
+  throw new Error("Invalid AI response format");
+}
+
+const attributes = JSON.parse(jsonMatch[0]);
+
+res.json({ attributes });
 
   } catch (err: any) {
     console.error("AI Generation Error Details:", err.message);

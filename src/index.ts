@@ -118,11 +118,11 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    // මෙතැන 'models/' ඉවත් කර කෙලින්ම මෝඩලය ලබාදෙන්න
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     const prompt = `Category: "${category}". Suggest 10-15 relevant custom product attributes. Return as a JSON array only.`;
-
+console.log("NEW CODE RUNNING");
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     const jsonMatch = text.match(/\[.*\]/s);

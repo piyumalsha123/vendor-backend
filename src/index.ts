@@ -80,7 +80,6 @@ dotenv.config();
 
 const app = express();
 
-// CORS Settings
 app.use(cors({
   origin: ["http://localhost:5173", "https://vendor-frontend-rose.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE","OPTIONS"],
@@ -96,13 +95,11 @@ app.get("/", (req, res) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logging middleware
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.originalUrl}`);
   next();
 });
 
-// Routes
 app.use("/api/v1/auth", AuthRouter);
 app.use("/api/v1/upload", uploadRouter);
 app.use("/api/v1/orders", orderRouter);
@@ -122,7 +119,6 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    // අපි gemini-1.5-flash භාවිතා කරමු, මෙය බොහෝමයක් ගිණුම් සඳහා ස්ථාවරව වැඩ කරයි.
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
@@ -141,8 +137,7 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    
-    // JSON අගය පිරිසිදු කර ගැනීම
+  
     const jsonMatch = text.match(/\[.*\]/s);
     if (!jsonMatch) {
       console.error("AI response did not contain a valid JSON array:", text);
@@ -158,12 +153,10 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
   }
 });
 
-// 404 Handler
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });
 });
 
-// Database Connection Helper
 const connectDB = async () => {
   try {
     if (mongoose.connection.readyState >= 1) return;
@@ -175,13 +168,12 @@ const connectDB = async () => {
   }
 };
 
-// Vercel Serverless Function Export
+
 export default async (req: any, res: any) => {
   await connectDB();
   return app(req, res);
 };
 
-// Local Development Environment
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
   connectDB().then(() => {

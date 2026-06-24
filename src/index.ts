@@ -115,7 +115,7 @@ app.use("/api/v1/vendor", vendorRouter);
 app.post("/api/v1/generate-attributes", async (req, res) => {
   const { category } = req.body;
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.3-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
   try {
     const prompt = `

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authenticate = void 0;
+exports.isAdmin = exports.authenticate = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -28,3 +28,12 @@ const authenticate = (req, res, next) => {
     }
 };
 exports.authenticate = authenticate;
+const isAdmin = (req, res, next) => {
+    if (req.user && req.user.roles && req.user.roles.includes('ADMIN')) {
+        next();
+    }
+    else {
+        res.status(403).json({ message: "Access denied. Admins only." });
+    }
+};
+exports.isAdmin = isAdmin;

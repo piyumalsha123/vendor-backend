@@ -38,6 +38,7 @@ const StoreSchema = new mongoose_1.Schema({
     vendorId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     category: { type: String, required: true },
     userId: { type: String, required: true, unique: true },
+    isActive: { type: Boolean, default: true },
     customAttributes: { type: [String], default: [] },
     deliveryMethods: { type: [String], default: [] },
     storeName: { type: String },

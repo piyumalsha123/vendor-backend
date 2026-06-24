@@ -56,6 +56,7 @@ const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const adminRouter_1 = __importDefault(require("./routers/adminRouter"));
 const authRouter_1 = __importDefault(require("./routers/authRouter"));
 const productRouter_1 = __importDefault(require("./routers/productRouter"));
 const orderRouter_1 = __importDefault(require("./routers/orderRouter"));
@@ -82,6 +83,7 @@ app.use((req, res, next) => {
     console.log(`[${req.method}] ${req.originalUrl}`);
     next();
 });
+app.use("/api/v1/admin", adminRouter_1.default);
 app.use("/api/v1/auth", authRouter_1.default);
 app.use("/api/v1/upload", uploadRouter_1.default);
 app.use("/api/v1/orders", orderRouter_1.default);

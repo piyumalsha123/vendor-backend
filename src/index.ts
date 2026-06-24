@@ -114,10 +114,17 @@ app.use("/api/v1/vendor", vendorRouter);
 
 app.post("/api/v1/generate-attributes", async (req, res) => {
   const { category } = req.body;
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY as string);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  
+  if (!process.env.GOOGLE_AI_API_KEY) {
+    console.error("GOOGLE_AI_API_KEY is missing in environment variables!");
+    return res.status(500).json({ error: "Server Configuration Error" });
+  }
 
   try {
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+    // අපි gemini-1.5-flash භාවිතා කරමු, මෙය බොහෝමයක් ගිණුම් සඳහා ස්ථාවරව වැඩ කරයි.
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
     const prompt = `
       You are an expert e-commerce catalog assistant. 
       The store category is: "${category}".
@@ -131,25 +138,26 @@ app.post("/api/v1/generate-attributes", async (req, res) => {
       Do not include any introductory or concluding text, explanations, or markdown formatting. 
       ONLY the raw JSON array.
     `;
+
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     
-    // const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    // const attributes = JSON.parse(jsonString);
-    
-const jsonMatch = text.match(/\[.*\]/s);
+    // JSON අගය පිරිසිදු කර ගැනීම
+    const jsonMatch = text.match(/\[.*\]/s);
     if (!jsonMatch) {
-      throw new Error("AI did not return a valid JSON array");
+      console.error("AI response did not contain a valid JSON array:", text);
+      throw new Error("Invalid response format from AI");
     }
     
     const attributes = JSON.parse(jsonMatch[0]);
-
     res.json({ attributes });
-  } catch (err) {
-    console.error("AI Generation Error:", err);
-    res.status(500).json({ error: "Failed to generate attributes" });
+
+  } catch (err: any) {
+    console.error("AI Generation Error Details:", err.message);
+    res.status(500).json({ error: "Failed to generate attributes: " + err.message });
   }
 });
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });

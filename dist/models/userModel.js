@@ -9,7 +9,7 @@ var UserRole;
     UserRole["VENDOR"] = "VENDOR";
 })(UserRole || (exports.UserRole = UserRole = {}));
 const userSchema = new mongoose_1.Schema({
-    userId: { type: String, unique: true },
+    userId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },

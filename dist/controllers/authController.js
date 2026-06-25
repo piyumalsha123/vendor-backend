@@ -8,22 +8,18 @@ const userModel_1 = require("../models/userModel");
 const counterModel_1 = require("../models/counterModel");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const token_1 = require("../utils/token");
-// api/v1/auth/register
+const storeModel_1 = __importDefault(require("../models/storeModel"));
 const createUser = async (req, res) => {
-    const { name, email, password, roles, storeName, phone, address } = req.body;
+    const { name, email, password, roles, storeName, phone, address, category } = req.body;
     try {
         const exUser = await userModel_1.UserModel.findOne({ email });
-        if (exUser) {
-            return res.status(400).json({ message: "User already exists..!" });
-        }
+        if (exUser)
+            return res.status(400).json({ message: "User already exists!" });
         const salt = await bcryptjs_1.default.genSalt(10);
         const hashedPassword = await bcryptjs_1.default.hash(password, salt);
         const assignRoles = [userModel_1.UserRole.USER];
-        if (roles?.includes("VENDOR") || roles?.includes(userModel_1.UserRole.VENDOR))
+        if (roles?.includes("VENDOR"))
             assignRoles.push(userModel_1.UserRole.VENDOR);
-        if (roles?.includes("ADMIN") || roles?.includes(userModel_1.UserRole.ADMIN))
-            assignRoles.push(userModel_1.UserRole.ADMIN);
-        const isApproved = true;
         const userCounter = await counterModel_1.CounterModel.findOneAndUpdate({ id: "user_code" }, { $inc: { seq: 1 } }, { returnDocument: 'after', upsert: true });
         const generatedUserId = `U${String(userCounter?.seq || 1).padStart(3, '0')}`;
         const newUser = new userModel_1.UserModel({
@@ -32,30 +28,32 @@ const createUser = async (req, res) => {
             email,
             password: hashedPassword,
             roles: Array.from(new Set(assignRoles)),
-            approved: isApproved,
-            storeName,
+            approved: true,
+            storeName: assignRoles.includes(userModel_1.UserRole.VENDOR) ? storeName : undefined,
             phone,
             address
         });
         const savedUser = await newUser.save();
-        res.status(201).json({
-            message: "Registration successfully..!",
-            data: {
-                userId: savedUser.userId,
-                name: savedUser.name,
-                email: savedUser.email,
-                roles: savedUser.roles,
-                approved: savedUser.approved,
-                id: savedUser._id
-            }
-        });
+        if (assignRoles.includes(userModel_1.UserRole.VENDOR)) {
+            await storeModel_1.default.create({
+                vendorId: savedUser._id,
+                userId: generatedUserId,
+                storeName: storeName || "My Store",
+                phone: phone || "",
+                email: email || "",
+                address: address || "",
+                category: category || "",
+                isActive: true,
+                customAttributes: [],
+                deliveryMethods: [],
+                logo: ""
+            });
+        }
+        res.status(201).json({ message: "Registration successful!", data: { id: savedUser._id } });
     }
     catch (err) {
         console.error("REGISTER ERROR:", err);
-        if (err.code === 11000) {
-            return res.status(400).json({ message: "User ID generation error, please try again." });
-        }
-        res.status(500).json({ message: "Internal server error while creating user..!" });
+        res.status(500).json({ message: "Internal server error!" });
     }
 };
 exports.createUser = createUser;

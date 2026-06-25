@@ -140,7 +140,7 @@ Example:
 `;
 
     const completion = await client.chat.completions.create({
-      model: "grok-beta",
+      model: "grok-2-latest",
       messages: [
         {
           role: "user",

@@ -86,7 +86,6 @@ export const createStore = async (req: AuthRequest, res: Response) => {
 
             category,
 
-            // register weddi dapu store name eka
             storeName: user?.storeName || user?.name || "My Store",
 
             phone,

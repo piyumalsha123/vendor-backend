@@ -58,19 +58,20 @@ const checkStore = async (req, res) => {
 exports.checkStore = checkStore;
 const createStore = async (req, res) => {
     try {
-        // 1. Frontend එකෙන් එවන සියලුම දත්ත ලබා ගන්න (storeName ද ඇතුළුව)
         const { storeName, category, phone, logo, email, address } = req.body;
-        const userId = req.user?.sub;
-        // 2. Database එකට දත්ත ඇතුලත් කරන්න
+        const userId = req.user?.sub || req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ error: "Unauthorized - No userId" });
+        }
         const newStore = new storeModel_1.default({
             vendorId: new mongoose_1.default.Types.ObjectId(userId),
-            userId: userId,
-            storeName: storeName || "My Store", // මෙතැනදී Frontend එකෙන් දෙන නම භාවිතා වේ
-            category: category,
-            phone: phone,
-            logo: logo,
-            email: email,
-            address: address
+            userId,
+            storeName: storeName || "My Store",
+            category,
+            phone,
+            logo,
+            email,
+            address
         });
         await newStore.save();
         return res.status(201).json({
@@ -79,9 +80,10 @@ const createStore = async (req, res) => {
         });
     }
     catch (err) {
-        console.error(err);
+        console.error("🔥 CREATE STORE ERROR:", err);
         return res.status(500).json({
-            error: "Server Error"
+            error: "Server Error",
+            details: err.message
         });
     }
 };

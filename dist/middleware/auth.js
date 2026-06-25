@@ -17,9 +17,12 @@ const authenticate = (req, res, next) => {
     const token = authHeader.split(" ")[1];
     try {
         const payload = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-        console.log("JWT Payload Data:", payload);
-        req.user = payload;
-        next();
+        req.user = {
+            id: payload.id || payload._id,
+            email: payload.email,
+            roles: payload.roles
+        };
+        next(); // 🔥 THIS WAS MISSING
     }
     catch (err) {
         if (err.name === 'TokenExpiredError') {

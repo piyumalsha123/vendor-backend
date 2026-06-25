@@ -15,6 +15,7 @@ const uploadRouter_1 = __importDefault(require("./routers/uploadRouter"));
 const storeRouter_1 = __importDefault(require("./routers/storeRouter"));
 const profileRouter_1 = __importDefault(require("./routers/profileRouter"));
 const vendorRouter_1 = __importDefault(require("./routers/vendorRouter"));
+const aiRouter_1 = __importDefault(require("./routers/aiRouter"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
@@ -43,8 +44,7 @@ app.use("/api/v1/stores", storeRouter_1.default);
 app.use("/api/v1/products", productRouter_1.default);
 app.use("/api/v1/profile", profileRouter_1.default);
 app.use("/api/v1/vendor", vendorRouter_1.default);
-// AI Feature එක පසුවට තබා ඇත
-// Edit Store details දෙන විට මෙයට අදාළ AI route එකක් පසුව එකතු කළ හැක.
+app.use("/api/v1", aiRouter_1.default);
 app.use((req, res) => {
     res.status(404).json({ message: `Route ${req.originalUrl} not found` });
 });

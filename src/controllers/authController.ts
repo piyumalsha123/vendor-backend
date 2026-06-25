@@ -4,64 +4,54 @@ import { CounterModel } from "../models/counterModel";
 import bcrypt from "bcryptjs";
 import { signAccessToken, signRefreshToken } from "../utils/token";
 import { AuthRequest } from "../middleware/auth";
+import Store from '../models/storeModel';
 
-// api/v1/auth/register
 export const createUser = async (req: Request, res: Response) => {
-  const { name, email, password, roles , storeName , phone , address} = req.body;
+  const { name, email, password, roles, storeName, phone, address, category } = req.body;
+  
   try {
     const exUser = await UserModel.findOne({ email });
-    if (exUser) {
-      return res.status(400).json({ message: "User already exists..!" });
-    }
+    if (exUser) return res.status(400).json({ message: "User already exists!" });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const assignRoles = [UserRole.USER];
-    if (roles?.includes("VENDOR") || roles?.includes(UserRole.VENDOR)) assignRoles.push(UserRole.VENDOR);
-    if (roles?.includes("ADMIN") || roles?.includes(UserRole.ADMIN)) assignRoles.push(UserRole.ADMIN);
-
-    const isApproved = true;
+    if (roles?.includes("VENDOR")) assignRoles.push(UserRole.VENDOR);
 
     const userCounter = await CounterModel.findOneAndUpdate(
       { id: "user_code" },
       { $inc: { seq: 1 } },
-      { returnDocument: 'after', upsert: true } 
+      { returnDocument: 'after', upsert: true }
     );
 
-    const generatedUserId = `U${String(userCounter?.seq || 1).padStart(3, '0')}`;
-
     const newUser = new UserModel({
-      userId: generatedUserId,
-      name,
-      email,
+      userId: `U${String(userCounter?.seq || 1).padStart(3, '0')}`,
+      name, email,
       password: hashedPassword,
       roles: Array.from(new Set(assignRoles)),
-      approved: isApproved,
-      storeName,
-      phone,
-      address
+      approved: true,
+      storeName, phone, address
     });
 
     const savedUser = await newUser.save();
 
-    res.status(201).json({
-      message: "Registration successfully..!",
-      data: {
-        userId: savedUser.userId,
-        name: savedUser.name,
-        email: savedUser.email,
-        roles: savedUser.roles,
-        approved: savedUser.approved,
-        id: savedUser._id
-      }
-    });
-  } catch (err: any) {
-    console.error("REGISTER ERROR:", err);
-    if (err.code === 11000) {
-      return res.status(400).json({ message: "User ID generation error, please try again." });
+    // Vendor නම් Store record එක සාදන්න
+    if (assignRoles.includes(UserRole.VENDOR)) {
+      await Store.create({
+        vendorId: savedUser._id,
+        storeName,
+        phone,
+        email,
+        address,
+        category: category || "General"
+      });
     }
-    res.status(500).json({ message: "Internal server error while creating user..!" });
+
+    res.status(201).json({ message: "Registration successful!", data: { id: savedUser._id } });
+  } catch (err) {
+    console.error("REGISTER ERROR:", err);
+    res.status(500).json({ message: "Internal server error!" });
   }
 };
 

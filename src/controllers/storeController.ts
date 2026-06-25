@@ -60,26 +60,20 @@ export const checkStore = async (req: AuthRequest, res: Response) => {
 
 export const createStore = async (req: AuthRequest, res: Response) => {
     try {
-
-        const { category, phone, logo, email, address } = req.body;
-
+        // 1. Frontend එකෙන් එවන සියලුම දත්ත ලබා ගන්න (storeName ද ඇතුළුව)
+        const { storeName, category, phone, logo, email, address } = req.body;
         const userId = req.user?.sub;
 
-        // logged user data gannawa
-        const user = await UserModel.findById(userId);
-
+        // 2. Database එකට දත්ත ඇතුලත් කරන්න
         const newStore = new Store({
             vendorId: new mongoose.Types.ObjectId(userId),
             userId: userId,
-
-            category,
-
-            storeName: user?.storeName || user?.name || "My Store",
-
-            phone,
-            logo,
-            email,
-            address
+            storeName: storeName || "My Store", // මෙතැනදී Frontend එකෙන් දෙන නම භාවිතා වේ
+            category: category,
+            phone: phone,
+            logo: logo,
+            email: email,
+            address: address
         });
 
         await newStore.save();
@@ -91,7 +85,6 @@ export const createStore = async (req: AuthRequest, res: Response) => {
 
     } catch (err) {
         console.error(err);
-
         return res.status(500).json({
             error: "Server Error"
         });

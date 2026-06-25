@@ -10,25 +10,19 @@ const productModel_1 = require("../models/productModel");
 const userModel_1 = require("../models/userModel");
 const saveStoreSettings = async (req, res) => {
     try {
-        const { customAttributes, deliveryMethods, category, logo, storeName, phone, email, address } = req.body;
+        const { storeName, phone, email, address, customAttributes, category, deliveryMethods, logo } = req.body;
         const userId = req.user?.sub;
-        const attributesArray = typeof customAttributes === 'string'
-            ? customAttributes.split(',').map((item) => item.trim())
-            : customAttributes;
         const updateData = {
-            customAttributes: attributesArray,
-            deliveryMethods,
-            category,
-            storeName,
-            phone,
-            email,
-            address, // අලුතින් එක් කළා
+            storeName, phone, email, address, category,
+            customAttributes: Array.isArray(customAttributes) ? customAttributes : [],
+            deliveryMethods: Array.isArray(deliveryMethods) ? deliveryMethods : [],
             vendorId: new mongoose_1.default.Types.ObjectId(userId),
             userId: userId
         };
         if (logo)
             updateData.logo = logo;
-        const updatedStore = await storeModel_1.default.findOneAndUpdate({ userId: userId }, { $set: updateData }, { upsert: true, returnDocument: 'after' });
+        const updatedStore = await storeModel_1.default.findOneAndUpdate({ userId: userId }, { $set: updateData }, { upsert: true, new: true } // 'new: true' පාවිච්චි කරන්න
+        );
         res.status(200).json(updatedStore);
     }
     catch (err) {
@@ -72,7 +66,6 @@ const createStore = async (req, res) => {
             vendorId: new mongoose_1.default.Types.ObjectId(userId),
             userId: userId,
             category,
-            // register weddi dapu store name eka
             storeName: user?.storeName || user?.name || "My Store",
             phone,
             logo,

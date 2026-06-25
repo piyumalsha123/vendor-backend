@@ -7,27 +7,15 @@ import { UserModel } from '../models/userModel';
 
 export const saveStoreSettings = async (req: AuthRequest, res: Response) => {
   try {
-    const { 
-      customAttributes, deliveryMethods, category, logo, 
-      storeName, phone, email, address 
-    } = req.body;
-    
+    const { storeName, phone, email, address, customAttributes, category, deliveryMethods, logo } = req.body;
     const userId = req.user?.sub;
 
-    const attributesArray = typeof customAttributes === 'string' 
-      ? customAttributes.split(',').map((item: string) => item.trim()) 
-      : customAttributes;
-
-    const updateData: any = { 
-        customAttributes: attributesArray, 
-        deliveryMethods, 
-        category, 
-        storeName,
-        phone,
-        email,     
-        address,    // අලුතින් එක් කළා
-        vendorId: new mongoose.Types.ObjectId(userId),
-        userId: userId
+    const updateData: any = {
+      storeName, phone, email, address, category,
+      customAttributes: Array.isArray(customAttributes) ? customAttributes : [],
+      deliveryMethods: Array.isArray(deliveryMethods) ? deliveryMethods : [],
+      vendorId: new mongoose.Types.ObjectId(userId),
+      userId: userId
     };
 
     if (logo) updateData.logo = logo;
@@ -35,7 +23,7 @@ export const saveStoreSettings = async (req: AuthRequest, res: Response) => {
     const updatedStore = await Store.findOneAndUpdate(
       { userId: userId }, 
       { $set: updateData }, 
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, new: true } // 'new: true' පාවිච්චි කරන්න
     );
     
     res.status(200).json(updatedStore);

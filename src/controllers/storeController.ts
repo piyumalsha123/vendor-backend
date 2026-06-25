@@ -148,12 +148,14 @@ export const getStoreById = async (req: Request, res: Response) => {
 
         const vendor = await UserModel.findById(vendorId); 
         
-        const storeWithEmail = {
+        const storeData = {
             ...store,
-            email: vendor ? vendor.email : "N/A" 
+            email: store.email || (vendor ? vendor.email : "N/A"),
+            // මෙතැනදී ප්‍රධාන වෙනස:
+            phone: store.phone && store.phone.trim() !== "" ? store.phone : (vendor ? vendor.phone : "No Phone")
         };
 
-        res.status(200).json(storeWithEmail);
+        res.status(200).json(storeData);
     } catch (err) {
         res.status(500).json({ error: "Server error" });
     }

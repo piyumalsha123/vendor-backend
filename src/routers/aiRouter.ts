@@ -52,12 +52,13 @@ Example: ["Size","Color","Material"]
     return res.json({ category, attributes });
 
   } catch (err: any) {
-    console.error("AI ERROR:", err?.response?.data || err.message);
+  console.error("🔥 FULL AI ERROR:", err?.response?.data || err.message || err);
 
-    return res.status(500).json({
-      message: "AI request failed"
-    });
-  }
+  return res.status(500).json({
+    message: "AI request failed",
+    error: err?.response?.data || err.message
+  });
+}
 });
 
 export default router;

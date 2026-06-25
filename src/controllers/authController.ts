@@ -7,11 +7,25 @@ import { AuthRequest } from "../middleware/auth";
 import Store from '../models/storeModel';
 
 export const createUser = async (req: Request, res: Response) => {
-  const { name, email, password, roles, storeName, phone, address, category } = req.body;
-  
   try {
+    console.log("🔥 REGISTER BODY:", req.body);
+
+    const {
+      name,
+      email,
+      password,
+      roles,
+      storeName,
+      phone,
+      address,
+      category
+    } = req.body;
+
     const exUser = await UserModel.findOne({ email });
-    if (exUser) return res.status(400).json({ message: "User already exists!" });
+    if (exUser) {
+      console.log("❌ User exists");
+      return res.status(400).json({ message: "User already exists!" });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -22,47 +36,63 @@ export const createUser = async (req: Request, res: Response) => {
     const userCounter = await CounterModel.findOneAndUpdate(
       { id: "user_code" },
       { $inc: { seq: 1 } },
-      { returnDocument: 'after', upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
-    const generatedUserId = `U${String(userCounter?.seq || 1).padStart(3, '0')}`;
+    console.log("🔥 COUNTER:", userCounter);
+
+    const generatedUserId = `U${String(userCounter?.seq || 1).padStart(3, "0")}`;
 
     const newUser = new UserModel({
       userId: generatedUserId,
       name,
       email,
       password: hashedPassword,
-      roles: Array.from(new Set(assignRoles)),
+      roles: assignRoles,
       approved: true,
-      storeName: assignRoles.includes(UserRole.VENDOR) ? storeName : undefined,
+      storeName,
       phone,
       address
     });
 
     const savedUser = await newUser.save();
 
-    if (assignRoles.includes(UserRole.VENDOR)) {
-  await Store.create({
-    vendorId: savedUser._id as any, 
-    userId: generatedUserId,
-    storeName: storeName || "My Store",
-    phone: phone || "",
-    email: email || "",
-    address: address || "",
-    category: category || "",
-    isActive: true, 
-    customAttributes: [], 
-    deliveryMethods: [],
-    logo: ""
-  });
-}
+    console.log("✅ USER SAVED:", savedUser._id);
 
-    res.status(201).json({ message: "Registration successful!", data: { id: savedUser._id } });
-  } catch (err) {
-    console.error("REGISTER ERROR:", err);
-    res.status(500).json({ message: "Internal server error!" });
+    if (assignRoles.includes(UserRole.VENDOR)) {
+      console.log("🏪 Creating store...");
+
+      const store = await Store.create({
+        vendorId: savedUser._id,
+        userId: generatedUserId,
+        storeName: storeName || "My Store",
+        phone,
+        email,
+        address,
+        category: category || "",
+        isActive: true,
+        customAttributes: [],
+        deliveryMethods: [],
+        logo: ""
+      });
+
+      console.log("✅ STORE CREATED:", store._id);
+    }
+
+    return res.status(201).json({
+      message: "Registration successful!",
+      data: { id: savedUser._id }
+    });
+
+  } catch (err: any) {
+    console.error("🔥 FULL REGISTER ERROR:", err);
+    return res.status(500).json({
+      message: "Internal server error!",
+      error: err.message
+    });
   }
 };
+
 
 // api/v1/auth/login
 export const login = async (req: Request, res: Response) => {

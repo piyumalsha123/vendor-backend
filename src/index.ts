@@ -11,6 +11,7 @@ import uploadRouter from "./routers/uploadRouter";
 import StoreRouter from "./routers/storeRouter";
 import profileRouter from "./routers/profileRouter";
 import vendorRouter from "./routers/vendorRouter";
+import aiRouter from "./routers/aiRouter";
 
 dotenv.config();
 
@@ -46,9 +47,8 @@ app.use("/api/v1/stores", StoreRouter);
 app.use("/api/v1/products", ProductRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
+app.use("/api/v1", aiRouter);
 
-// AI Feature එක පසුවට තබා ඇත
-// Edit Store details දෙන විට මෙයට අදාළ AI route එකක් පසුව එකතු කළ හැක.
 
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });

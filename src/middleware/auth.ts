@@ -16,25 +16,25 @@ export const authenticate = (
   res: Response,
   next: NextFunction
 ) => {
- 
-
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
     return res.status(401).json({ message: "Token not found" });
   }
 
-
   const token = authHeader.split(" ")[1];
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    console.log("JWT Payload Data:", payload);
-    
-   
-    (req as any).user = payload;
-    
-    next();
+    const payload: any = jwt.verify(token, JWT_SECRET);
+
+    (req as any).user = {
+      id: payload.id || payload._id,
+      email: payload.email,
+      roles: payload.roles
+    };
+
+    next(); // 🔥 THIS WAS MISSING
+
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ message: "Token expired, please login again!" });

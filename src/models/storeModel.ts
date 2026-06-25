@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IStore extends Document {
   vendorId: mongoose.Types.ObjectId;
+  userId: string;
   category: string;
   isActive: boolean;
   customAttributes: string[];

@@ -25,28 +25,37 @@ export const createUser = async (req: Request, res: Response) => {
       { returnDocument: 'after', upsert: true }
     );
 
+    const generatedUserId = `U${String(userCounter?.seq || 1).padStart(3, '0')}`;
+
     const newUser = new UserModel({
-      userId: `U${String(userCounter?.seq || 1).padStart(3, '0')}`,
-      name, email,
+      userId: generatedUserId,
+      name,
+      email,
       password: hashedPassword,
       roles: Array.from(new Set(assignRoles)),
       approved: true,
-      storeName, phone, address
+      storeName: assignRoles.includes(UserRole.VENDOR) ? storeName : undefined,
+      phone,
+      address
     });
 
     const savedUser = await newUser.save();
 
-    // Vendor නම් Store record එක සාදන්න
     if (assignRoles.includes(UserRole.VENDOR)) {
-      await Store.create({
-        vendorId: savedUser._id,
-        storeName,
-        phone,
-        email,
-        address,
-        category: category || "General"
-      });
-    }
+  await Store.create({
+    vendorId: savedUser._id as any, 
+    userId: generatedUserId,
+    storeName: storeName || "My Store",
+    phone: phone || "",
+    email: email || "",
+    address: address || "",
+    category: category || "",
+    isActive: true, 
+    customAttributes: [], 
+    deliveryMethods: [],
+    logo: ""
+  });
+}
 
     res.status(201).json({ message: "Registration successful!", data: { id: savedUser._id } });
   } catch (err) {

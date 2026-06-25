@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get('/stats', authenticate, isAdmin, async (req, res) => {
   try {
-    // Array එකක් තුළ අගයක් සෙවීමට නිවැරදි Enum භාවිතය
+    
     const users = await UserModel.countDocuments({ roles: { $in: [UserRole.USER] } });
     const vendors = await UserModel.countDocuments({ roles: { $in: [UserRole.VENDOR] } }); 
     const orders = await OrderModel.countDocuments();
@@ -49,16 +49,33 @@ router.get('/orders', authenticate, isAdmin, async (req, res) => {
 
 router.get('/stores', authenticate, isAdmin, async (req, res) => {
   try {
-    const stores = await StoreModel.find().populate('vendorId', 'name email phone'); 
-    res.json(stores);
+    const stores = await StoreModel.find()
+      .populate({
+        path: 'vendorId',
+        select: 'name email phone', 
+        model: 'user_details'      
+      })
+      .lean(); 
+    
+    res.json(stores || []); 
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch stores" });
+    console.error("Store Fetch Error:", err);
+    res.status(500).json([]); 
   }
 });
 
 router.get('/users', authenticate, isAdmin, async (req, res) => {
   const users = await UserModel.find({  roles: { $in: [UserRole.USER] } });
   res.json(users);
+});
+
+router.get('/users-all', authenticate, isAdmin, async (req, res) => {
+  try {
+    const allUsers = await UserModel.find({}); 
+    res.json(allUsers);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
 });
 
 export default router;

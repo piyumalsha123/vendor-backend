@@ -35,7 +35,7 @@ router.get('/store/:storeId', async (req, res) => {
     const products = await ProductModel.find({ storeId: req.params.storeId });
     res.json(products);
   } catch (err) {
-    res.status(500).json({ error: "Failed" });
+    res.status(500).json({ error: "Data fetch thai shakyu nahi" });
   }
 });
 

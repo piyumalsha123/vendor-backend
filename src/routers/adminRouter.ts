@@ -78,4 +78,18 @@ router.get('/users-all', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+router.put('/users/:userId/toggle-block', authenticate, isAdmin, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.approved = !user.approved; 
+    await user.save();
+
+    res.json({ message: `User status updated`, approved: user.approved });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update user status" });
+  }
+});
+
 export default router;

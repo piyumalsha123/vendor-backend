@@ -163,7 +163,12 @@ export const getStoreById = async (req: Request, res: Response) => {
 
 export const getProductsByVendor = async (req: Request, res: Response) => {
     try {
-        const { vendorId } = req.params;
+        const { vendorId } = req.query; 
+        console.log("Requested VendorID:", vendorId); 
+        
+        if (!vendorId || typeof vendorId !== 'string') {
+            return res.status(400).json({ error: "Invalid Vendor ID" });
+        }
        
         const products = await ProductModel.find({ vendorId: vendorId }); 
         res.status(200).json(products);

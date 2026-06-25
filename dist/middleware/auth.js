@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isAdmin = exports.authenticate = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const userModel_1 = require("../models/userModel");
 dotenv_1.default.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 const authenticate = (req, res, next) => {
@@ -29,7 +30,8 @@ const authenticate = (req, res, next) => {
 };
 exports.authenticate = authenticate;
 const isAdmin = (req, res, next) => {
-    if (req.user && req.user.roles && req.user.roles.includes('ADMIN')) {
+    console.log("User Roles from Middleware:", req.user?.roles);
+    if (req.user && req.user.roles && Array.isArray(req.user.roles) && req.user.roles.includes(userModel_1.UserRole.ADMIN)) {
         next();
     }
     else {

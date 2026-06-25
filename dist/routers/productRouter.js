@@ -5,6 +5,7 @@ const productController_1 = require("../controllers/productController");
 const userModel_1 = require("../models/userModel");
 const role_1 = require("../middleware/role");
 const auth_1 = require("../middleware/auth");
+const productModel_1 = require("../models/productModel");
 const router = (0, express_1.Router)();
 // Vendor-only routes
 router.post("/save", auth_1.authenticate, (0, role_1.requireRole)([userModel_1.UserRole.VENDOR]), productController_1.createProduct);
@@ -16,4 +17,13 @@ router.post("/ai/suggest", auth_1.authenticate, (0, role_1.requireRole)([userMod
 router.get('/my-products', auth_1.authenticate, productController_1.getMyProducts);
 router.get('/public-products', productController_1.getAllPublicProducts);
 router.get('/', productController_1.getProducts);
+router.get('/store/:storeId', async (req, res) => {
+    try {
+        const products = await productModel_1.ProductModel.find({ storeId: req.params.storeId });
+        res.json(products);
+    }
+    catch (err) {
+        res.status(500).json({ error: "Data fetch thai shakyu nahi" });
+    }
+});
 exports.default = router;

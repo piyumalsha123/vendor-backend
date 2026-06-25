@@ -6,16 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const userModel_1 = require("../models/userModel");
 const orderModel_1 = require("../models/orderModel");
-const productModel_1 = require("../models/productModel");
 const storeModel_1 = __importDefault(require("../models/storeModel"));
-// Middleware ගොනු නිවැරදිව import කරගන්න
 const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
-// 1. Dashboard Stats (Admin පමණක් සඳහා)
 router.get('/stats', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
     try {
-        const users = await userModel_1.UserModel.countDocuments({ role: 'user' });
-        const vendors = await userModel_1.UserModel.countDocuments({ role: 'vendor' });
+        const users = await userModel_1.UserModel.countDocuments({ roles: { $in: [userModel_1.UserRole.USER] } });
+        const vendors = await userModel_1.UserModel.countDocuments({ roles: { $in: [userModel_1.UserRole.VENDOR] } });
         const orders = await orderModel_1.OrderModel.countDocuments();
         res.json({ users, vendors, orders });
     }
@@ -24,17 +21,6 @@ router.get('/stats', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
         res.status(500).json({ error: "Failed to fetch stats" });
     }
 });
-// 2. Product Moderation (Admin පමණක් සඳහා)
-router.delete('/products/:id', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
-    try {
-        await productModel_1.ProductModel.findByIdAndDelete(req.params.id);
-        res.json({ message: "Product deleted successfully" });
-    }
-    catch (err) {
-        res.status(500).json({ error: "Failed to delete product" });
-    }
-});
-// 3. Vendor Block/Unblock (Admin පමණක් සඳහා)
 router.put('/vendors/:storeId/toggle-block', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
     try {
         const store = await storeModel_1.default.findById(req.params.storeId);
@@ -51,36 +37,55 @@ router.put('/vendors/:storeId/toggle-block', auth_1.authenticate, auth_1.isAdmin
         res.status(500).json({ error: "Failed to update block status" });
     }
 });
-// 4. Order Overview (Admin පමණක් සඳහා)
 router.get('/orders', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
     try {
-        const orders = await orderModel_1.OrderModel.find()
-            .populate('customerId', 'name email') // පාරිභෝගිකයාගේ විස්තර පෙන්වීමට
-            .sort({ createdAt: -1 });
+        const orders = await orderModel_1.OrderModel.find().populate('customerId', 'name email').sort({ createdAt: -1 });
         res.json(orders);
     }
     catch (err) {
         res.status(500).json({ error: "Failed to fetch orders" });
     }
 });
-// 5. Order Status Update (Admin පමණක් සඳහා)
-router.put('/orders/:id/status', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
-    try {
-        const { status } = req.body;
-        const order = await orderModel_1.OrderModel.findByIdAndUpdate(req.params.id, { status }, { new: true });
-        res.json({ message: "Order status updated", order });
-    }
-    catch (err) {
-        res.status(500).json({ error: "Failed to update order status" });
-    }
-});
 router.get('/stores', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
     try {
-        const stores = await storeModel_1.default.find();
-        res.json(stores);
+        const stores = await storeModel_1.default.find()
+            .populate({
+            path: 'vendorId',
+            select: 'name email phone',
+            model: 'user_details'
+        })
+            .lean();
+        res.json(stores || []);
     }
     catch (err) {
-        res.status(500).json({ error: "Failed to fetch stores" });
+        console.error("Store Fetch Error:", err);
+        res.status(500).json([]);
+    }
+});
+router.get('/users', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
+    const users = await userModel_1.UserModel.find({ roles: { $in: [userModel_1.UserRole.USER] } });
+    res.json(users);
+});
+router.get('/users-all', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
+    try {
+        const allUsers = await userModel_1.UserModel.find({});
+        res.json(allUsers);
+    }
+    catch (err) {
+        res.status(500).json({ error: "Failed to fetch users" });
+    }
+});
+router.put('/users/:userId/toggle-block', auth_1.authenticate, auth_1.isAdmin, async (req, res) => {
+    try {
+        const user = await userModel_1.UserModel.findById(req.params.userId);
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        user.approved = !user.approved;
+        await user.save();
+        res.json({ message: `User status updated`, approved: user.approved });
+    }
+    catch (err) {
+        res.status(500).json({ error: "Failed to update user status" });
     }
 });
 exports.default = router;

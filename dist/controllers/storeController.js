@@ -124,11 +124,13 @@ const getStoreById = async (req, res) => {
         if (!store)
             return res.status(404).json({ message: "Store not found" });
         const vendor = await userModel_1.UserModel.findById(vendorId);
-        const storeWithEmail = {
+        const storeData = {
             ...store,
-            email: vendor ? vendor.email : "N/A"
+            email: store.email || (vendor ? vendor.email : "N/A"),
+            // මෙතැනදී ප්‍රධාන වෙනස:
+            phone: store.phone && store.phone.trim() !== "" ? store.phone : (vendor ? vendor.phone : "No Phone")
         };
-        res.status(200).json(storeWithEmail);
+        res.status(200).json(storeData);
     }
     catch (err) {
         res.status(500).json({ error: "Server error" });
@@ -137,7 +139,11 @@ const getStoreById = async (req, res) => {
 exports.getStoreById = getStoreById;
 const getProductsByVendor = async (req, res) => {
     try {
-        const { vendorId } = req.params;
+        const { vendorId } = req.query;
+        console.log("Requested VendorID:", vendorId);
+        if (!vendorId || typeof vendorId !== 'string') {
+            return res.status(400).json({ error: "Invalid Vendor ID" });
+        }
         const products = await productModel_1.ProductModel.find({ vendorId: vendorId });
         res.status(200).json(products);
     }

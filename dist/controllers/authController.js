@@ -70,18 +70,16 @@ const createUser = async (req, res) => {
     }
 };
 exports.createUser = createUser;
-// api/v1/auth/login
 const login = async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await userModel_1.UserModel.findOne({ email });
         if (!user) {
+            console.log("Login fail: User not found");
             return res.status(401).json({ message: "Invalid credentials..!" });
         }
-        if (user.roles.includes(userModel_1.UserRole.VENDOR) && !user.approved) {
-            return res.status(403).json({ message: "Your Vendor account is pending admin approval!" });
-        }
         const isValid = await bcryptjs_1.default.compare(password, user.password);
+        console.log("Password valid:", isValid); // මෙතැනින් බලන්න true ද false ද කියා
         if (!isValid) {
             return res.status(401).json({ message: "Invalid credentials..!" });
         }

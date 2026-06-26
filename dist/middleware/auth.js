@@ -18,11 +18,11 @@ const authenticate = (req, res, next) => {
     try {
         const payload = jsonwebtoken_1.default.verify(token, JWT_SECRET);
         req.user = {
-            id: payload.id || payload._id,
+            sub: payload.id || payload._id,
             email: payload.email,
             roles: payload.roles
         };
-        next(); // 🔥 THIS WAS MISSING
+        next();
     }
     catch (err) {
         if (err.name === 'TokenExpiredError') {

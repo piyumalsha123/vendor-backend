@@ -1,64 +1,83 @@
+
 import express from "express";
-import axios from "axios";
+import OpenAI from "openai";
 
 const router = express.Router();
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 router.post("/generate-attributes", async (req, res) => {
   try {
     const { category } = req.body;
 
+    if (!category) {
+      return res.status(400).json({
+        message: "Category is required"
+      });
+    }
+
     const prompt = `
-Generate ONLY JSON array of attributes for: ${category}
-Example: ["Size","Color","Material"]
+Generate useful ecommerce product attributes for this category.
+
+Category: ${category}
+
+Rules:
+- Return ONLY valid JSON array
+- No explanation
+- No markdown
+
+Example:
+["Color","Size","Material"]
 `;
 
-    // ✅ THIS IS WHERE YOUR CODE GOES
-    const response = await axios.post(
-      "https://api.x.ai/v1/chat/completions",
-      {
-        model: "grok-2",
-        messages: [
-          {
-            role: "system",
-            content: "Return ONLY JSON array. No text."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.7
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.XAI_API_KEY}`,
-          "Content-Type": "application/json"
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an ecommerce AI. Return only JSON arrays."
+        },
+        {
+          role: "user",
+          content: prompt
         }
-      }
-    );
+      ],
+      temperature: 0.7
+    });
 
-    const aiText = response.data.choices[0].message.content;
+    const aiText =
+      completion.choices[0].message.content || "[]";
 
-    let attributes;
+    let attributes: string[] = [];
+
     try {
       attributes = JSON.parse(aiText);
     } catch (err) {
+      console.log("AI RAW:", aiText);
+
       return res.status(500).json({
-        message: "AI returned invalid JSON",
+        message: "Invalid AI JSON",
         raw: aiText
       });
     }
 
-    return res.json({ category, attributes });
+    return res.json({
+      success: true,
+      category,
+      attributes
+    });
 
   } catch (err: any) {
-  console.error("🔥 FULL AI ERROR:", err?.response?.data || err.message || err);
+    console.log("OPENAI ERROR:", err);
 
-  return res.status(500).json({
-    message: "AI request failed",
-    error: err?.response?.data || err.message
-  });
-}
+    return res.status(500).json({
+      message: "AI request failed",
+      error: err.message
+    });
+  }
 });
 
 export default router;

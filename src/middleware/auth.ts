@@ -28,12 +28,12 @@ export const authenticate = (
     const payload: any = jwt.verify(token, JWT_SECRET);
 
     (req as any).user = {
-      id: payload.id || payload._id,
+      sub: payload.id || payload._id,
       email: payload.email,
       roles: payload.roles
     };
 
-    next(); // 🔥 THIS WAS MISSING
+    next(); 
 
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {

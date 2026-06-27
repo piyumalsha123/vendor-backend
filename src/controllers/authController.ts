@@ -164,19 +164,23 @@ export const login = async (req: Request, res: Response) => {
 
     // ========================= RESPONSE =========================
     return res.status(200).json({
-      message: "Login successful",
+  message: "Login successful",
 
-      data: {
-        id: user._id,
-        userId: user.userId,
-        email: user.email,
-        roles: user.roles,
-        storeName: user.storeName,
+  data: {
+    id: user._id,
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+    roles: user.roles,
 
-        accessToken,
-        refreshToken
-      }
-    });
+    storeName: user.storeName,
+    phone: user.phone,
+    address: user.address,
+
+    accessToken,
+    refreshToken
+  }
+});
 
   } catch (err) {
     console.error("🔥 LOGIN ERROR:", err);
@@ -209,19 +213,21 @@ export const getMyDetails = async (
     }
 
     return res.status(200).json({
-      message: "ok",
+  message: "ok",
 
-      data: {
-        id: user._id,
-        userId: user.userId,
-        name: user.name,
-        email: user.email,
-        roles: user.roles,
-        storeName: user.storeName,
-        phone: user.phone,
-        address: user.address
-      }
-    });
+  data: {
+    id: user._id,
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+
+    roles: user.roles,
+
+    storeName: user.storeName,
+    phone: user.phone,
+    address: user.address
+  }
+});
 
   } catch (err) {
     console.error("🔥 GET ME ERROR:", err);

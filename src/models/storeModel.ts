@@ -16,7 +16,7 @@ export interface IStore extends Document {
 
 const StoreSchema: Schema = new Schema({
   vendorId: { type: Schema.Types.ObjectId, ref: 'user_details', required: true },
-  category: { type: String, required: true },
+  category: { type: String, required: false, default: "" },
   userId: { type: String, required: true },
   isActive: { type: Boolean, default: true },
   customAttributes: { type: [String], default: [] },

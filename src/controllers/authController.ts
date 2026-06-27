@@ -1,11 +1,14 @@
+
 import { Request, Response } from "express";
-import { IUser, UserModel, UserRole } from "../models/userModel";
-import { CounterModel } from "../models/counterModel";
 import bcrypt from "bcryptjs";
+
+import { UserModel, UserRole } from "../models/userModel";
+import { CounterModel } from "../models/counterModel";
 import { signAccessToken, signRefreshToken } from "../utils/token";
 import { AuthRequest } from "../middleware/auth";
-import Store from '../models/storeModel';
+import Store from "../models/storeModel";
 
+// ========================= REGISTER =========================
 export const createUser = async (req: Request, res: Response) => {
   try {
     console.log("🔥 REGISTER BODY:", req.body);
@@ -21,28 +24,44 @@ export const createUser = async (req: Request, res: Response) => {
       category
     } = req.body;
 
+    // ========================= CHECK USER =========================
     const exUser = await UserModel.findOne({ email });
+
     if (exUser) {
-      console.log("❌ User exists");
-      return res.status(400).json({ message: "User already exists!" });
+      console.log("❌ User already exists");
+
+      return res.status(400).json({
+        message: "User already exists!"
+      });
     }
 
+    // ========================= HASH PASSWORD =========================
     const salt = await bcrypt.genSalt(10);
+
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // ========================= ASSIGN ROLES =========================
     const assignRoles = [UserRole.USER];
-    if (roles?.includes("VENDOR")) assignRoles.push(UserRole.VENDOR);
 
+    if (roles?.includes("VENDOR")) {
+      assignRoles.push(UserRole.VENDOR);
+    }
+
+    // ========================= GENERATE USER CODE =========================
     const userCounter = await CounterModel.findOneAndUpdate(
       { id: "user_code" },
       { $inc: { seq: 1 } },
-      { returnDocument: "after", upsert: true }
+      {
+        returnDocument: "after",
+        upsert: true
+      }
     );
 
-    console.log("🔥 COUNTER:", userCounter);
+    const generatedUserId = `U${String(
+      userCounter?.seq || 1
+    ).padStart(3, "0")}`;
 
-    const generatedUserId = `U${String(userCounter?.seq || 1).padStart(3, "0")}`;
-
+    // ========================= CREATE USER =========================
     const newUser = new UserModel({
       userId: generatedUserId,
       name,
@@ -50,26 +69,40 @@ export const createUser = async (req: Request, res: Response) => {
       password: hashedPassword,
       roles: assignRoles,
       approved: true,
-      storeName,
-      phone,
-      address
+
+      // vendor optional details
+      storeName: storeName || "",
+      phone: phone || "",
+      address: address || ""
     });
 
     const savedUser = await newUser.save();
 
     console.log("✅ USER SAVED:", savedUser._id);
 
+    // ========================= CREATE STORE ONLY FOR VENDOR =========================
     if (assignRoles.includes(UserRole.VENDOR)) {
-      console.log("🏪 Creating store...");
+      console.log("🏪 Creating vendor store...");
+
+      // store name required for vendor
+      if (!storeName) {
+        return res.status(400).json({
+          message: "Store name is required for vendors"
+        });
+      }
 
       const store = await Store.create({
         vendorId: savedUser._id,
         userId: generatedUserId,
-        storeName: storeName || "My Store",
-        phone,
+
+        storeName,
+        phone: phone || "",
         email,
-        address,
+        address: address || "",
+
+        // category can be empty initially
         category: category || "",
+
         isActive: true,
         customAttributes: [],
         deliveryMethods: [],
@@ -79,13 +112,19 @@ export const createUser = async (req: Request, res: Response) => {
       console.log("✅ STORE CREATED:", store._id);
     }
 
+    // ========================= RESPONSE =========================
     return res.status(201).json({
       message: "Registration successful!",
-      data: { id: savedUser._id }
+      data: {
+        id: savedUser._id,
+        email: savedUser.email,
+        roles: savedUser.roles
+      }
     });
 
   } catch (err: any) {
     console.error("🔥 FULL REGISTER ERROR:", err);
+
     return res.status(500).json({
       message: "Internal server error!",
       error: err.message
@@ -93,82 +132,131 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-
+// ========================= LOGIN =========================
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
+
     const user = await UserModel.findOne({ email });
+
     if (!user) {
-      console.log("Login fail: User not found");
-      return res.status(401).json({ message: "Invalid credentials..!" });
+      console.log("❌ Login failed - user not found");
+
+      return res.status(401).json({
+        message: "Invalid credentials!"
+      });
     }
 
     const isValid = await bcrypt.compare(password, user.password);
-    console.log("Password valid:", isValid); // මෙතැනින් බලන්න true ද false ද කියා
-    
+
+    console.log("🔑 Password valid:", isValid);
+
     if (!isValid) {
-      return res.status(401).json({ message: "Invalid credentials..!" });
+      return res.status(401).json({
+        message: "Invalid credentials!"
+      });
     }
 
+    // ========================= TOKENS =========================
     const accessToken = signAccessToken(user);
+
     const refreshToken = signRefreshToken(user);
 
-    res.status(200).json({
-      message: "Success",
+    // ========================= RESPONSE =========================
+    return res.status(200).json({
+      message: "Login successful",
+
       data: {
+        id: user._id,
+        userId: user.userId,
         email: user.email,
         roles: user.roles,
         storeName: user.storeName,
+
         accessToken,
         refreshToken
       }
     });
+
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    res.status(500).json({ message: "Internal server error while login..!" });
+    console.error("🔥 LOGIN ERROR:", err);
+
+    return res.status(500).json({
+      message: "Internal server error while login!"
+    });
   }
 };
 
-// api/v1/auth/me
-export const getMyDetails = async (req: AuthRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  
+// ========================= GET ME =========================
+export const getMyDetails = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
-    const user = await UserModel.findById(req.user.sub).select("-password");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Unauthorized"
+      });
     }
 
-    res.status(200).json({ 
-      message: "ok", 
-      data: { 
-        id: user._id, 
-        userId: user.userId, 
-        email: user.email, 
-        roles: user.roles ,
-        storeName: user.storeName
-      } 
+    const user = await UserModel.findById(req.user.sub)
+      .select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "ok",
+
+      data: {
+        id: user._id,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        roles: user.roles,
+        storeName: user.storeName,
+        phone: user.phone,
+        address: user.address
+      }
     });
+
   } catch (err) {
-    console.error("GET ME ERROR:", err);
-    res.status(500).json({ message: "Internal server error while fetching user details..!" });
+    console.error("🔥 GET ME ERROR:", err);
+
+    return res.status(500).json({
+      message: "Internal server error while fetching user details!"
+    });
   }
 };
 
-export const getUserDetails = async (req: Request, res: Response) => {
+// ========================= GET USER DETAILS =========================
+export const getUserDetails = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { id } = req.params;
-  
-    const user = await UserModel.findById(id).select("name email phone address"); 
-    
+
+    const user = await UserModel.findById(id)
+      .select("name email phone address");
+
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User not found"
+      });
     }
-    res.status(200).json(user);
+
+    return res.status(200).json(user);
+
   } catch (err) {
-    res.status(500).json({ message: "Error" });
+    console.error("🔥 GET USER DETAILS ERROR:", err);
+
+    return res.status(500).json({
+      message: "Error fetching user details"
+    });
   }
 };
+

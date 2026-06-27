@@ -118,8 +118,8 @@ app.get("/", (req, res) => {
   res.json({ message: "Vendor Backend API running" });
 });
 
-app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/auth", AuthRouter);
+app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/upload", uploadRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/store", StoreRouter);

@@ -19,7 +19,9 @@ export const authenticate = (
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ message: "Token not found" });
+    return res.status(401).json({
+      message: "Token not found",
+    });
   }
 
   const token = authHeader.split(" ")[1];
@@ -27,28 +29,43 @@ export const authenticate = (
   try {
     const payload: any = jwt.verify(token, JWT_SECRET);
 
-    (req as any).user = {
-  sub: payload.id || payload._id,
-  email: payload.email,
-  roles: payload.roles
-};
-    next(); 
+    req.user = {
+      sub: payload.sub,
+      email: payload.email,
+      roles: payload.roles || [],
+    };
+
+    next();
 
   } catch (err: any) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: "Token expired, please login again!" });
+    console.log("AUTH ERROR:", err);
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Token expired",
+      });
     }
-    return res.status(400).json({ message: "Invalid Token" });
+
+    return res.status(401).json({
+      message: "Invalid token",
+    });
   }
 };
 
-export const isAdmin = (req: any, res: any, next: any) => {
-  console.log("User Roles from Middleware:", req.user?.roles); 
-
-  if (req.user && req.user.roles && Array.isArray(req.user.roles) && req.user.roles.includes(UserRole.ADMIN)) {
+export const isAdmin = (
+  req: any,
+  res: any,
+  next: any
+) => {
+  if (
+    req.user &&
+    req.user.roles &&
+    req.user.roles.includes(UserRole.ADMIN)
+  ) {
     next();
   } else {
-    res.status(403).json({ message: "Access denied. Admins only." });
+    res.status(403).json({
+      message: "Access denied",
+    });
   }
 };
-

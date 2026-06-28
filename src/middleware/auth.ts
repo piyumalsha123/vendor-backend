@@ -28,11 +28,10 @@ export const authenticate = (
     const payload: any = jwt.verify(token, JWT_SECRET);
 
     (req as any).user = {
-      sub: payload.id || payload._id,
-      email: payload.email,
-      roles: payload.roles
-    };
-
+  sub: payload.id || payload._id,
+  email: payload.email,
+  roles: payload.roles
+};
     next(); 
 
   } catch (err: any) {

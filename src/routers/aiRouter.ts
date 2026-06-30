@@ -1,26 +1,32 @@
 
 import express from "express";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const router = express.Router();
 
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY as string
+);
 
-router.post("/generate-attributes", async (req, res) => {
-  try {
-    const { category } = req.body;
+router.post(
+  "/generate-attributes",
+  async (req, res) => {
+    try {
+      const { category } = req.body;
 
-    if (!category) {
-      return res.status(400).json({
-        success: false,
-        message: "Category is required",
-      });
-    }
+      if (!category) {
+        return res.status(400).json({
+          success: false,
+          message: "Category is required",
+        });
+      }
 
-    const prompt = `
+      const model =
+        genAI.getGenerativeModel({
+          model: "gemini-3.5-flash",
+        });
+
+      const prompt = `
 Generate useful ecommerce product attributes for this category.
 
 Category: ${category}
@@ -34,77 +40,49 @@ Example:
 ["Color","Size","Material"]
 `;
 
-const completion =
-  await openai.chat.completions.create({
-   model: "google/gemma-2-9b-it:free",
+      const result =
+        await model.generateContent(prompt);
 
-    messages: [
-      {
-        role: "system",
-        content:
-          "Return ONLY valid JSON array.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
+      const response =
+        await result.response;
 
-    temperature: 0.2,
-  });
+      const text = response.text();
 
+      console.log("AI RAW:", text);
 
-    console.log(
-      "OPENROUTER RESPONSE:",
-      JSON.stringify(completion, null, 2)
-    );
+      let attributes: string[] = [];
 
-    // SAFE RESPONSE
-    const aiText =
-      completion?.choices?.[0]?.message
-        ?.content || "[]";
+      try {
+        const cleaned = text
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
 
-    // CLEAN RESPONSE
-    const cleanedText = aiText
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+        attributes = JSON.parse(cleaned);
+      } catch (err) {
+        return res.status(500).json({
+          success: false,
+          message: "Invalid AI JSON",
+          raw: text,
+        });
+      }
 
-    let attributes: string[] = [];
-
-    try {
-      attributes = JSON.parse(cleanedText);
-    } catch (jsonError) {
-      console.log(
-        "INVALID JSON RESPONSE:",
-        cleanedText
-      );
+      return res.json({
+        success: true,
+        category,
+        attributes,
+      });
+    } catch (err: any) {
+      console.log("GEMINI ERROR:", err);
 
       return res.status(500).json({
         success: false,
-        message: "Invalid AI JSON",
-        raw: cleanedText,
+        message: "AI request failed",
+        error: err.message,
       });
     }
-
-    return res.json({
-      success: true,
-      category,
-      attributes,
-    });
-  } catch (err: any) {
-    console.log(
-      "OPENROUTER ERROR:",
-      err?.message || err
-    );
-
-    return res.status(500).json({
-      success: false,
-      message: "AI request failed",
-      error: err?.message || "Unknown error",
-    });
   }
-});
+);
 
 export default router;
 

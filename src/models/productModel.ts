@@ -7,7 +7,13 @@ export interface IProduct extends Document {
   description: string;
   price: number;
   stock: number;
-  category: 'clothing' | 'foods' | 'flowers' | 'crafts' | 'other';
+  category: 'Clothing' | 'Cakes' | 'Handmade Flowers' | 'Floral Arrangements' | 'Plants' | 
+            'Bakery & Sweets' | 'Healthy Snacks' | 'Handmade Candles' | 'Home Decor' | 
+            'Resin & Craft Art' | 'Personalized Gifts' | 'Handmade Soaps' | 'Beauty & Organic' | 
+            'Stationery & Journals' | 'Fabric Bags' | 'Jewelry & Accessories' | 
+            'Hand-painted Pottery' | 'Greeting Cards' | 'Gift Hampers' | 
+            'Essential Oil Rollers' | 'Macrame Wall Decor' | 'Customized Mugs' | 
+            'Hair Care Products' | 'Other';
   images: string[];
   variants: any;
   variantsMetadata:any;
@@ -28,12 +34,19 @@ const productSchema = new Schema<IProduct>(
     price: { type: Number, required: true },
     stock: { type: Number, required: true },
     category: {
-      type: String,
-      enum: ['clothing', 'foods', 'flowers', 'crafts', 'other'],
-      required: true,
-    },
+  type: String,
+  enum: [
+    'Clothing', 'Cakes', 'Handmade Flowers', 'Floral Arrangements', 'Plants', 
+    'Bakery & Sweets', 'Healthy Snacks', 'Handmade Candles', 'Home Decor', 
+    'Resin & Craft Art', 'Personalized Gifts', 'Handmade Soaps', 'Beauty & Organic', 
+    'Stationery & Journals', 'Fabric Bags', 'Jewelry & Accessories', 
+    'Hand-painted Pottery', 'Greeting Cards', 'Gift Hampers', 
+    'Essential Oil Rollers', 'Macrame Wall Decor', 'Customized Mugs', 
+    'Hair Care Products', 'Other'
+  ],
+  required: true,
+},
     images: { type: [String], default: [] },
-    // variants: { type: Schema.Types.Mixed, default: {} },
     variants: { type: Object },
     variantsMetadata: { type: Object },
     isAvailable: { type: Boolean, default: true },

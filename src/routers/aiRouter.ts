@@ -34,24 +34,26 @@ Example:
 ["Color","Size","Material"]
 `;
 
-    const completion =
-      await openai.chat.completions.create({
-        model: "deepseek/deepseek-r1-0528:free",
+const completion =
+  await openai.chat.completions.create({
+    model:
+      "meta-llama/llama-3-8b-instruct:free",
 
-        messages: [
-          {
-            role: "system",
-            content:
-              "Return ONLY valid JSON array.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
+    messages: [
+      {
+        role: "system",
+        content:
+          "Return ONLY valid JSON array.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
 
-        temperature: 0.2,
-      });
+    temperature: 0.2,
+  });
+
 
     console.log(
       "OPENROUTER RESPONSE:",

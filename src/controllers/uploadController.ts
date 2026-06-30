@@ -44,7 +44,7 @@ export const uploadImage = async (req: Request, res: Response) => {
     }
 
     const result = await new Promise((resolve, reject) => {
-      // memoryStorage භාවිතා කරන නිසා buffer එක පාවිච්චි කරන්න
+    
       const stream = cloudinary.uploader.upload_stream(
         { folder: "store_logos" }, 
         (error, result) => {

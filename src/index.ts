@@ -127,7 +127,7 @@ app.use("/api/v1/stores", StoreRouter);
 app.use("/api/v1/products", ProductRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/vendor", vendorRouter);
-app.use("/api/v1", aiRouter);
+app.use("/api/v1/ai", aiRouter);
 
 app.use((req, res) => {
   res.status(404).json({

@@ -13,13 +13,11 @@ router.post("/generate-attributes", async (req, res) => {
     const { category } = req.body;
 
     if (!category) {
-      return res.status(400).json({
-        message: "Category is required",
-      });
+      return res.status(400).json({ message: "Category is required" });
     }
 
     const completion = await openai.chat.completions.create({
-      model: "deepseek/deepseek-r1-0528:free",
+      model: "openai/gpt-4o-mini", // ✅ SAFE MODEL (important)
       messages: [
         {
           role: "system",
@@ -27,34 +25,35 @@ router.post("/generate-attributes", async (req, res) => {
         },
         {
           role: "user",
-          content: `Generate ecommerce attributes for: ${category}`,
+          content: `
+Generate ecommerce product attributes.
+
+Category: ${category}
+
+Return ONLY JSON array like:
+["Color","Size","Material"]
+          `,
         },
       ],
       temperature: 0.2,
     });
 
-    console.log(
-      "FULL RESPONSE:",
-      JSON.stringify(completion, null, 2)
-    );
+    console.log("FULL RESPONSE:", JSON.stringify(completion, null, 2));
 
-    // ✅ SAFE CHECK (important fix)
-    if (!completion?.choices || completion.choices.length === 0) {
+    // ✅ SAFE CHECK 1
+    if (!completion?.choices?.length) {
       return res.status(500).json({
-        message: "No response from AI model",
+        message: "No AI response",
         raw: completion,
       });
     }
 
-    let aiText = completion.choices[0]?.message?.content;
+    // ✅ SAFE TEXT EXTRACTION
+    const aiText = completion.choices[0].message?.content ?? "[]";
 
-    if (!aiText) {
-      return res.status(500).json({
-        message: "Empty AI response",
-      });
-    }
+    console.log("AI TEXT:", aiText);
 
-    // cleanup
+    // clean response
     const cleaned = aiText
       .replace(/```json/g, "")
       .replace(/```/g, "")
@@ -65,10 +64,8 @@ router.post("/generate-attributes", async (req, res) => {
     try {
       attributes = JSON.parse(cleaned);
     } catch (err) {
-      console.log("RAW AI TEXT:", aiText);
-
       return res.status(500).json({
-        message: "AI returned invalid JSON",
+        message: "Invalid JSON from AI",
         raw: aiText,
       });
     }
@@ -80,7 +77,7 @@ router.post("/generate-attributes", async (req, res) => {
     });
 
   } catch (err: any) {
-    console.error("OPENROUTER ERROR:", err);
+    console.log("AI ERROR:", err);
 
     return res.status(500).json({
       message: "AI request failed",

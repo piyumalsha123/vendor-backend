@@ -130,9 +130,7 @@ app.use("/api/v1/vendor", vendorRouter);
 app.use("/api/v1/ai", aiRouter);
 
 app.use((req, res) => {
-  res.status(404).json({
-    message: `Route ${req.originalUrl} not found`,
-  });
+  res.status(404).json({ message: "Route not found" });
 });
 
 const connectDB = async () => {

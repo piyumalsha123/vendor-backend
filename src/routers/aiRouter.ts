@@ -1,3 +1,4 @@
+
 import express from "express";
 import OpenAI from "openai";
 
@@ -13,60 +14,75 @@ router.post("/generate-attributes", async (req, res) => {
     const { category } = req.body;
 
     if (!category) {
-      return res.status(400).json({ message: "Category is required" });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: "openai/gpt-4o-mini", // ✅ SAFE MODEL (important)
-      messages: [
-        {
-          role: "system",
-          content: "Return ONLY valid JSON array. No text.",
-        },
-        {
-          role: "user",
-          content: `
-Generate ecommerce product attributes.
-
-Category: ${category}
-
-Return ONLY JSON array like:
-["Color","Size","Material"]
-          `,
-        },
-      ],
-      temperature: 0.2,
-    });
-
-    console.log("FULL RESPONSE:", JSON.stringify(completion, null, 2));
-
-    // ✅ SAFE CHECK 1
-    if (!completion?.choices?.length) {
-      return res.status(500).json({
-        message: "No AI response",
-        raw: completion,
+      return res.status(400).json({
+        success: false,
+        message: "Category is required",
       });
     }
 
-    // ✅ SAFE TEXT EXTRACTION
-    const aiText = completion.choices[0].message?.content ?? "[]";
+    const prompt = `
+Generate useful ecommerce product attributes for this category.
 
-    console.log("AI TEXT:", aiText);
+Category: ${category}
 
-    // clean response
-    const cleaned = aiText
+Rules:
+- Return ONLY valid JSON array
+- No explanation
+- No markdown
+
+Example:
+["Color","Size","Material"]
+`;
+
+    const completion =
+      await openai.chat.completions.create({
+        model: "deepseek/deepseek-r1-0528:free",
+
+        messages: [
+          {
+            role: "system",
+            content:
+              "Return ONLY valid JSON array.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+
+        temperature: 0.2,
+      });
+
+    console.log(
+      "OPENROUTER RESPONSE:",
+      JSON.stringify(completion, null, 2)
+    );
+
+    // SAFE RESPONSE
+    const aiText =
+      completion?.choices?.[0]?.message
+        ?.content || "[]";
+
+    // CLEAN RESPONSE
+    const cleanedText = aiText
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    let attributes;
+    let attributes: string[] = [];
 
     try {
-      attributes = JSON.parse(cleaned);
-    } catch (err) {
+      attributes = JSON.parse(cleanedText);
+    } catch (jsonError) {
+      console.log(
+        "INVALID JSON RESPONSE:",
+        cleanedText
+      );
+
       return res.status(500).json({
-        message: "Invalid JSON from AI",
-        raw: aiText,
+        success: false,
+        message: "Invalid AI JSON",
+        raw: cleanedText,
       });
     }
 
@@ -75,15 +91,19 @@ Return ONLY JSON array like:
       category,
       attributes,
     });
-
   } catch (err: any) {
-    console.log("AI ERROR:", err);
+    console.log(
+      "OPENROUTER ERROR:",
+      err?.message || err
+    );
 
     return res.status(500).json({
+      success: false,
       message: "AI request failed",
-      error: err.message,
+      error: err?.message || "Unknown error",
     });
   }
 });
 
 export default router;
+

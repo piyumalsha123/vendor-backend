@@ -99,8 +99,8 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
     res.json({ message: "Vendor Backend API running" });
 });
-app.use("/api/v1/admin", adminRouter_1.default);
 app.use("/api/v1/auth", authRouter_1.default);
+app.use("/api/v1/admin", adminRouter_1.default);
 app.use("/api/v1/upload", uploadRouter_1.default);
 app.use("/api/v1/orders", orderRouter_1.default);
 app.use("/api/v1/store", storeRouter_1.default);
@@ -108,7 +108,7 @@ app.use("/api/v1/stores", storeRouter_1.default);
 app.use("/api/v1/products", productRouter_1.default);
 app.use("/api/v1/profile", profileRouter_1.default);
 app.use("/api/v1/vendor", vendorRouter_1.default);
-app.use("/api/v1", aiRouter_1.default);
+app.use("/api/v1/ai", aiRouter_1.default);
 app.use((req, res) => {
     res.status(404).json({
         message: `Route ${req.originalUrl} not found`,

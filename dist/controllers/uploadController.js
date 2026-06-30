@@ -39,7 +39,6 @@ const uploadImage = async (req, res) => {
             return res.status(400).json({ message: "No file uploaded!" });
         }
         const result = await new Promise((resolve, reject) => {
-            // memoryStorage භාවිතා කරන නිසා buffer එක පාවිච්චි කරන්න
             const stream = cloudinary_1.default.uploader.upload_stream({ folder: "store_logos" }, (error, result) => {
                 if (error)
                     reject(error);

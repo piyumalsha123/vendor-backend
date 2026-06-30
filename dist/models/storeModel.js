@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const StoreSchema = new mongoose_1.Schema({
     vendorId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'user_details', required: true },
-    category: { type: String, required: true },
+    category: { type: String, required: false, default: "" },
     userId: { type: String, required: true },
     isActive: { type: Boolean, default: true },
     customAttributes: { type: [String], default: [] },

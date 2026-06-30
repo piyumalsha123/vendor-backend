@@ -4,11 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const openai_1 = __importDefault(require("openai"));
+const generative_ai_1 = require("@google/generative-ai");
 const router = express_1.default.Router();
-const openai = new openai_1.default({
-    apiKey: process.env.OPENAI_API_KEY
-});
+const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 router.post("/generate-attributes", async (req, res) => {
     try {
         const { category } = req.body;
@@ -17,34 +15,29 @@ router.post("/generate-attributes", async (req, res) => {
                 message: "Category is required"
             });
         }
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash-latest"
+        });
         const prompt = `
+
+
 Generate useful ecommerce product attributes for this category.
 
 Category: ${category}
 
 Rules:
-- Return ONLY valid JSON array
-- No explanation
-- No markdown
+
+* Return ONLY valid JSON array
+* No explanation
+* No markdown
 
 Example:
 ["Color","Size","Material"]
 `;
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are an ecommerce AI. Return only JSON arrays."
-                },
-                {
-                    role: "user",
-                    content: prompt
-                }
-            ],
-            temperature: 0.7
-        });
-        const aiText = completion.choices[0].message.content || "[]";
+        const result = await model.generateContent(prompt);
+        const aiText = result.response
+            .text()
+            .trim();
         let attributes = [];
         try {
             attributes = JSON.parse(aiText);
@@ -63,7 +56,7 @@ Example:
         });
     }
     catch (err) {
-        console.log("OPENAI ERROR:", err);
+        console.log("GEMINI ERROR:", err);
         return res.status(500).json({
             message: "AI request failed",
             error: err.message

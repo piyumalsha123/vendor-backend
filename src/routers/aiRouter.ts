@@ -26,19 +26,51 @@ router.post(
           model: "gemini-3.5-flash",
         });
 
-      const prompt = `
-Generate useful ecommerce product attributes for this category.
+      
+const prompt = `
+You are an expert ecommerce product attribute generator.
+
+Your task:
+Generate the MOST IMPORTANT and MOST COMMON product attributes
+for an ecommerce store category.
 
 Category: ${category}
 
-Rules:
-- Return ONLY valid JSON array
+STRICT RULES:
+- Return ONLY a valid JSON array
 - No explanation
 - No markdown
+- No extra text
+- No numbering
+- No duplicate attributes
+- Maximum 12 attributes
+- Attributes must be short and clean
+- Focus on attributes customers actually use for filtering/searching
 
-Example:
-["Color","Size","Material"]
+GOOD attribute examples:
+Color
+Size
+Material
+Weight
+Brand
+Flavor
+Pattern
+Style
+Capacity
+Scent
+Occasion
+Shape
+
+BAD examples:
+"This product is high quality"
+"Customers like this"
+"Best selling item"
+
+Return format example:
+["Color","Size","Material","Brand"]
 `;
+
+
 
       const result =
         await model.generateContent(prompt);

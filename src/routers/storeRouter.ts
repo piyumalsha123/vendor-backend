@@ -17,6 +17,4 @@ router.get('/products/:vendorId', getProductsByVendor);
 
 router.post("/upload-logo", authenticate, upload.single("logo"), uploadImage);
 
-router.delete('/stores/:id', authenticate, deleteStore);
-
 export default router;

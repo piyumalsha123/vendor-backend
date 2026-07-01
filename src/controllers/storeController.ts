@@ -4,6 +4,7 @@ import { AuthRequest } from '../middleware/auth';
 import mongoose from 'mongoose';
 import { ProductModel } from '../models/productModel';
 import { UserModel } from '../models/userModel';
+import storeModel from '../models/storeModel';
 
 export const saveStoreSettings = async (req: AuthRequest, res: Response) => {
   try {
@@ -192,10 +193,11 @@ export const getProductsByVendor = async (req: Request, res: Response) => {
     }
 };
 
+// backend/controllers/storeController.ts
 export const deleteStore = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const store = await Store.findByIdAndDelete(id);
+    const store = await storeModel.findByIdAndDelete(id); // StoreModel එක පාවිච්චි කරන්න
     
     if (!store) {
       return res.status(404).json({ message: "Store not found" });

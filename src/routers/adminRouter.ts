@@ -4,6 +4,7 @@ import { OrderModel } from '../models/orderModel';
 import { ProductModel } from '../models/productModel';
 import StoreModel from '../models/storeModel'; 
 import { authenticate, isAdmin } from '../middleware/auth'; 
+import { deleteStore } from '../controllers/storeController';
 
 const router = express.Router();
 
@@ -91,5 +92,7 @@ router.put('/users/:userId/toggle-block', authenticate, isAdmin, async (req, res
     res.status(500).json({ error: "Failed to update user status" });
   }
 });
+
+router.delete('/stores/:id', authenticate, isAdmin, deleteStore);
 
 export default router;

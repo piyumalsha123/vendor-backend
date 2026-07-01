@@ -58,40 +58,67 @@ export const checkStore = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// export const createStore = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const { storeName, category, phone, logo, email, address } = req.body;
+
+//     const userId = req.user?.sub || req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json({ error: "Unauthorized - No userId" });
+//     }
+
+//     const newStore = new Store({
+//       vendorId: new mongoose.Types.ObjectId(userId),
+//       userId,
+//       storeName: storeName || "My Store",
+//       category,
+//       phone,
+//       logo,
+//       email,
+//       address
+//     });
+
+//     await newStore.save();
+
+//     return res.status(201).json({
+//       success: true,
+//       store: newStore
+//     });
+
+//   } catch (err: any) {
+//     console.error("🔥 CREATE STORE ERROR:", err);
+//     return res.status(500).json({
+//       error: "Server Error",
+//       details: err.message
+//     });
+//   }
+// };
+
 export const createStore = async (req: AuthRequest, res: Response) => {
   try {
-    const { storeName, category, phone, logo, email, address } = req.body;
-
     const userId = req.user?.sub || req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized - No userId" });
-    }
-
+    // User ගේ තොරතුරු Database එකෙන් සොයාගන්න
+    const user = await UserModel.findById(userId);
+    
+    // req.body එකෙන් එන දත්ත හෝ User model එකේ ඇති දත්ත භාවිතා කරන්න
     const newStore = new Store({
       vendorId: new mongoose.Types.ObjectId(userId),
       userId,
-      storeName: storeName || "My Store",
-      category,
-      phone,
-      logo,
-      email,
-      address
+      storeName: req.body.storeName || "My Store",
+      category: req.body.category || "",
+      email: req.body.email || user?.email || "",
+      phone: req.body.phone || user?.phone || "",
+      address: req.body.address || user?.address || "",
+      logo: req.body.logo || ""
     });
 
     await newStore.save();
-
-    return res.status(201).json({
-      success: true,
-      store: newStore
-    });
-
+    return res.status(201).json({ success: true, store: newStore });
   } catch (err: any) {
-    console.error("🔥 CREATE STORE ERROR:", err);
-    return res.status(500).json({
-      error: "Server Error",
-      details: err.message
-    });
+    return res.status(500).json({ error: "Server Error", details: err.message });
   }
 };
 

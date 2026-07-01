@@ -192,3 +192,17 @@ export const getProductsByVendor = async (req: Request, res: Response) => {
     }
 };
 
+export const deleteStore = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const store = await Store.findByIdAndDelete(id);
+    
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+    
+    res.status(200).json({ message: "Store deleted successfully" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

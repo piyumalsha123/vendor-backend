@@ -141,53 +141,49 @@ export const login = async (req: Request, res: Response) => {
 
     if (!user) {
       console.log("❌ Login failed - user not found");
-
-      return res.status(401).json({
-        message: "Invalid credentials!"
-      });
+      return res.status(401).json({ message: "Invalid credentials!" });
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
+    // ========================= ADD THIS BLOCK =========================
+    // Block කර ඇති පරිශීලකයින් ලොග් වීම වැළැක්වීම
+    if (user.approved === false) {
+      console.log("🚫 Login failed - user is blocked");
+      return res.status(403).json({ 
+        message: "Your account has been blocked by the admin!" 
+      });
+    }
+    // ==================================================================
 
+    const isValid = await bcrypt.compare(password, user.password);
     console.log("🔑 Password valid:", isValid);
 
     if (!isValid) {
-      return res.status(401).json({
-        message: "Invalid credentials!"
-      });
+      return res.status(401).json({ message: "Invalid credentials!" });
     }
 
-    // ========================= TOKENS =========================
+    // ... ඉතිරි කොටස (Tokens & Response) එලෙසම පවතී ...
     const accessToken = signAccessToken(user);
-
     const refreshToken = signRefreshToken(user);
 
-    // ========================= RESPONSE =========================
     return res.status(200).json({
-  message: "Login successful",
-
-  data: {
-    id: user._id,
-    userId: user.userId,
-    name: user.name,
-    email: user.email,
-    roles: user.roles,
-
-    storeName: user.storeName,
-    phone: user.phone,
-    address: user.address,
-
-    accessToken,
-    refreshToken
-  }
-});
+      message: "Login successful",
+      data: {
+        id: user._id,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        roles: user.roles,
+        storeName: user.storeName,
+        phone: user.phone,
+        address: user.address,
+        accessToken,
+        refreshToken
+      }
+    });
 
   } catch (err) {
     console.error("🔥 LOGIN ERROR:", err);
-
-    return res.status(500).json({
-      message: "Internal server error while login!"
-    });
+    return res.status(500).json({ message: "Internal server error while login!" });
   }
 };
 

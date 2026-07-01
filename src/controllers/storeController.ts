@@ -107,7 +107,7 @@ export const createStore = async (req: AuthRequest, res: Response) => {
     const newStore = new Store({
       vendorId: new mongoose.Types.ObjectId(userId),
       userId,
-      storeName: req.body.storeName || "My Store",
+      storeName: req.body.storeName ||user?.storeName || "My Store",
       category: req.body.category || "",
       email: req.body.email || user?.email || "",
       phone: req.body.phone || user?.phone || "",

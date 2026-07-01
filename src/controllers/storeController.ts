@@ -97,8 +97,13 @@ export const createStore = async (req: AuthRequest, res: Response) => {
 
 export const getStoreSettings = async (req: AuthRequest, res: Response) => {
   try {
-    const store = await Store.findOne({ userId: req.user?.sub });
-    if (!store) return res.status(404).json({ message: "Store not found" });
+    const userId = req.user?.sub;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const store = await Store.findOne({ userId: userId });
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
     res.status(200).json(store); 
   } catch (err) {
     res.status(500).json({ message: "Server error" });

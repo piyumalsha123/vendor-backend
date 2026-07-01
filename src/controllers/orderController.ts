@@ -157,20 +157,24 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
 
 export const deleteOrder = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params; 
+        const { id } = req.params;
         const customerId = req.user?.sub || req.user?.id;
 
-        const result = await OrderModel.deleteOne({ 
-            _id: id, 
-            customerId: customerId 
-        });
+        // ID එක නිවැරදි දැයි බලන්න
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid ID format" });
+        }
+
+        const result = await OrderModel.deleteOne({ _id: id, customerId: customerId });
 
         if (result.deletedCount === 0) {
-            return res.status(404).json({ message: "Order not found or unauthorized to delete." });
+            return res.status(404).json({ message: "Order not found" });
         }
         
         res.status(200).json({ message: "Order deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ message: "Server error" });
+    } catch (error: any) {
+        // දෝෂය console එකට අරගෙන client එකට යවන්න
+        console.error("DELETE ORDER ERROR:", error);
+        res.status(500).json({ message: "Server error", details: error.message });
     }
 };

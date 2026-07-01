@@ -154,3 +154,23 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+export const deleteOrder = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params; 
+        const customerId = req.user?.sub || req.user?.id;
+
+        const result = await OrderModel.deleteOne({ 
+            _id: id, 
+            customerId: customerId 
+        });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: "Order not found or unauthorized to delete." });
+        }
+        
+        res.status(200).json({ message: "Order deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
+};

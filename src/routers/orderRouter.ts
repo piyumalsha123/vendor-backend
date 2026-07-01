@@ -10,6 +10,6 @@ router.post("/", authenticate, createOrder);
 router.get("/customer/me", authenticate, getCustomerOrders); 
 router.get("/vendor/me", authenticate, getVendorOrders);  
 router.put("/status/:id", authenticate, updateOrder); 
-router.put("/cancel/:orderId", authenticate, cancelOrder);
+router.patch("/cancel/:orderId", authenticate, cancelOrder);
 
 export default router;

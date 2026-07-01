@@ -100,10 +100,9 @@ export const createStore = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.sub || req.user?.id;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    // User ගේ තොරතුරු Database එකෙන් සොයාගන්න
     const user = await UserModel.findById(userId);
     
-    // req.body එකෙන් එන දත්ත හෝ User model එකේ ඇති දත්ත භාවිතා කරන්න
+    
     const newStore = new Store({
       vendorId: new mongoose.Types.ObjectId(userId),
       userId,
